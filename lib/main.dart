@@ -139,13 +139,13 @@ class _InstagramHomePageState extends State<InstagramHomePage> {
       unselectedItemColor: Colors.grey,
       onTap: (index) {
         switch (index) {
-          case 2:
-            // Tap on 'Add' → Go to Camera Page (left swipe)
-            _pageController.jumpToPage(0);
           case 0:
             // Tap on 'Home' → Go to Feed
             _pageController.jumpToPage(1);
-          case 3:
+          case 2:
+            // Tap on 'Add' → Go to Camera Page (left swipe)
+            _pageController.jumpToPage(0);
+          case 4:
             _pageController.jumpToPage(4); // Profile Page
         }
 
