@@ -12,7 +12,7 @@ void main() {
       builder: (context, child) {
         return MaterialApp(debugShowCheckedModeBanner: false, home: child);
       },
-      child: const InstagramHomePage(), // or LoginPage(), etc.
+      child: const LoginPage(), // or LoginPage(), etc.
     ),
   );
 }
@@ -34,29 +34,42 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final emailController = TextEditingController();
+  final username = TextEditingController();
   final passwordController = TextEditingController();
 
   Future<void> login() async {
-    final url = Uri.parse('http://localhost:3000/login');
+    final url = Uri.parse('http://supercoolfun.site:5001/api/login');
+    final body = jsonEncode({
+      'username': username.text,
+      'password': passwordController.text,
+    });
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': emailController.text,
-        'password': passwordController.text,
-      }),
+      body: body,
     );
 
-    final result = jsonDecode(response.body);
+    Map<String, dynamic> result = {};
+    try {
+      if (response.body.isNotEmpty) {
+        result = jsonDecode(response.body);
+      }
+    } catch (e) {
+      result = {'message': response.body};
+      print(result);
+    }
     if (response.statusCode == 200) {
-      ScaffoldMessenger.of(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Login successful')),
+      );
+      Navigator.pushReplacement(
         context,
-      ).showSnackBar(SnackBar(content: Text(result['message'])));
+        MaterialPageRoute(builder: (context) => InstagramHomePage()),
+      );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(result['message'])));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Login failed')),
+      );
     }
   }
 
@@ -69,8 +82,8 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           children: [
             TextField(
-              controller: emailController,
-              decoration: InputDecoration(labelText: 'Email'),
+              controller: username,
+              decoration: InputDecoration(labelText: 'Username'),
             ),
             TextField(
               controller: passwordController,
@@ -79,7 +92,124 @@ class _LoginPageState extends State<LoginPage> {
             ),
             SizedBox(height: 20),
             ElevatedButton(onPressed: login, child: Text('Login')),
+            SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RegisterPage(),
+                  ), // make sure RegisterPage is imported
+                );
+              },
+              child: Text("Don't have an account? Sign Up"),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class RegisterPage extends StatefulWidget {
+  @override
+  _RegisterPageState createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final loginController = TextEditingController();
+  final passwordController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final emailController = TextEditingController();
+
+  Future<void> register() async {
+    final url = Uri.parse(
+      'http://supercoolfun.site:5001/api/register',
+    ); // replace with actual API endpoint
+
+    final body = jsonEncode({
+      "login": loginController.text,
+      "password": passwordController.text,
+      "firstName": firstNameController.text,
+      "lastName": lastNameController.text,
+      "email": emailController.text,
+    });
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      final result = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Registration successful'),
+          ),
+        );
+        Navigator.pop(context); // Go back to login or home
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Registration failed')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Register')),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(
+                controller: loginController,
+                decoration: InputDecoration(labelText: 'Username'),
+              ),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Password'),
+              ),
+              TextField(
+                controller: firstNameController,
+                decoration: InputDecoration(labelText: 'First Name'),
+              ),
+              TextField(
+                controller: lastNameController,
+                decoration: InputDecoration(labelText: 'Last Name'),
+              ),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: 'Email'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(onPressed: register, child: Text('Register')),
+              SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LoginPage(),
+                    ), // make sure RegisterPage is imported
+                  );
+                },
+                child: Text("Have an account? Login"),
+              ),
+            ],
+          ),
         ),
       ),
     );
