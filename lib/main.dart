@@ -1,122 +1,564 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ScreenUtilInit(
+      designSize: const Size(375, 812), // iPhone X default
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(debugShowCheckedModeBanner: false, home: child);
+      },
+      child: const LoginPage(), // or LoginPage(), etc.
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+    return InstagramHomePage();
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _LoginPageState extends State<LoginPage> {
+  final username = TextEditingController();
+  final passwordController = TextEditingController();
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  Future<void> login() async {
+    final url = Uri.parse('http://supercoolfun.site:5001/api/login');
+    final body = jsonEncode({
+      'username': username.text,
+      'password': passwordController.text,
     });
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
+
+    Map<String, dynamic> result = {};
+    try {
+      if (response.body.isNotEmpty) {
+        result = jsonDecode(response.body);
+      }
+    } catch (e) {
+      result = {'message': response.body};
+      print(result);
+    }
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Login successful')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => InstagramHomePage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Login failed')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      appBar: AppBar(title: Text('Login')),
+      body: Padding(
+        padding: EdgeInsets.all(20),
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          children: [
+            TextField(
+              controller: username,
+              decoration: InputDecoration(labelText: 'Username'),
+            ),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: InputDecoration(labelText: 'Password'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(onPressed: login, child: Text('Login')),
+            SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RegisterPage(),
+                  ), // make sure RegisterPage is imported
+                );
+              },
+              child: Text("Don't have an account? Sign Up"),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+class RegisterPage extends StatefulWidget {
+  @override
+  _RegisterPageState createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final loginController = TextEditingController();
+  final passwordController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final emailController = TextEditingController();
+
+  Future<void> register() async {
+    final url = Uri.parse(
+      'http://supercoolfun.site:5001/api/register',
+    ); // replace with actual API endpoint
+
+    final body = jsonEncode({
+      "login": loginController.text,
+      "password": passwordController.text,
+      "firstName": firstNameController.text,
+      "lastName": lastNameController.text,
+      "email": emailController.text,
+    });
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      final result = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Registration successful'),
+          ),
+        );
+        Navigator.pop(context); // Go back to login or home
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Registration failed')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Register')),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(
+                controller: loginController,
+                decoration: InputDecoration(labelText: 'Username'),
+              ),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Password'),
+              ),
+              TextField(
+                controller: firstNameController,
+                decoration: InputDecoration(labelText: 'First Name'),
+              ),
+              TextField(
+                controller: lastNameController,
+                decoration: InputDecoration(labelText: 'Last Name'),
+              ),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: 'Email'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(onPressed: register, child: Text('Register')),
+              SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LoginPage(),
+                    ), // make sure RegisterPage is imported
+                  );
+                },
+                child: Text("Have an account? Login"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class InstagramHomePage extends StatefulWidget {
+  const InstagramHomePage({super.key});
+
+  @override
+  State<InstagramHomePage> createState() => _InstagramHomePageState();
+}
+
+class _InstagramHomePageState extends State<InstagramHomePage> {
+  final PageController _pageController = PageController(
+    initialPage: 1,
+  ); // Feed in center
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _pages.addAll([
+      const CameraPage(),
+      FeedPage(
+        onMessageIconPressed: () {
+          _pageController.jumpToPage(2); // Navigate to MessagesPage
+        },
+      ),
+      const MessagesPage(),
+      const EditProfilePage(),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index == 1 ? 0 : _selectedIndex;
+          });
+        },
+        children: _pages,
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      currentIndex: _selectedIndex,
+      selectedItemColor: Colors.black,
+      unselectedItemColor: Colors.grey,
+      onTap: (index) {
+        switch (index) {
+          case 0:
+            // Tap on 'Home' → Go to Feed
+            _pageController.jumpToPage(1);
+          case 2:
+            // Tap on 'Add' → Go to Camera Page (left swipe)
+            _pageController.jumpToPage(0);
+          case 4:
+            _pageController.jumpToPage(4); // Profile Page
+        }
+
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.add_box_outlined),
+          label: 'Add',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.favorite_border),
+          label: 'Likes',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          label: 'Profile',
+        ),
+      ],
+    );
+  }
+}
+
+class CameraPage extends StatelessWidget {
+  const CameraPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Icon(Icons.camera_alt, size: 100, color: Colors.grey),
+    );
+  }
+}
+
+class FeedPage extends StatelessWidget {
+  final VoidCallback onMessageIconPressed;
+  const FeedPage({super.key, required this.onMessageIconPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Campus Quest',
+          style: TextStyle(
+            fontFamily: 'Boldmark',
+            fontSize: 28.sp,
+            color: Colors.black,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.explore_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QuestPage()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.send),
+            onPressed: onMessageIconPressed,
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        itemCount: 5,
+        itemBuilder: (context, index) {
+          return PostCard(index: index);
+        },
+      ),
+    );
+  }
+}
+
+class PostCard extends StatelessWidget {
+  final int index;
+  const PostCard({required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          leading: const CircleAvatar(),
+          title: Text(
+            'user$index',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          trailing: const Icon(Icons.more_vert),
+        ),
+        Placeholder(fallbackHeight: 300.h),
+        Padding(
+          padding: EdgeInsets.all(8.w),
+          child: Row(
+            children: const [
+              Icon(Icons.favorite_border),
+              SizedBox(width: 12),
+              Icon(Icons.comment),
+              SizedBox(width: 12),
+              Icon(Icons.send),
+              Spacer(),
+              Icon(Icons.bookmark_border),
+            ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8.w),
+          child: const Text(
+            'Liked by user1 and others',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+          child: Text('user$index: Caption goes here...'),
+        ),
+      ],
+    );
+  }
+}
+
+class MessagesPage extends StatelessWidget {
+  const MessagesPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Icon(Icons.message, size: 100, color: Colors.grey),
+    );
+  }
+}
+
+class EditProfilePage extends StatefulWidget {
+  const EditProfilePage({super.key});
+
+  @override
+  State<EditProfilePage> createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController bioController = TextEditingController();
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    bioController.dispose();
+    super.dispose();
+  }
+
+  void saveProfile() {
+    // Here you could send data to the backend or local storage
+    String username = usernameController.text;
+    String bio = bioController.text;
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Profile updated: $username')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Profile'),
+        leading: BackButton(),
+        actions: [
+          IconButton(icon: const Icon(Icons.check), onPressed: saveProfile),
+        ],
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: () {
+                // Add image picker logic later
+              },
+              child: CircleAvatar(
+                radius: 50.r,
+                backgroundColor: Colors.grey[300],
+                child: const Icon(Icons.camera_alt, size: 40),
+              ),
+            ),
+            SizedBox(height: 20.h),
+            TextField(
+              controller: usernameController,
+              decoration: const InputDecoration(labelText: 'Username'),
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: bioController,
+              decoration: const InputDecoration(labelText: 'Bio'),
+              maxLines: 3,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class QuestPage extends StatelessWidget {
+  const QuestPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Map<String, String>> quests = [
+      {
+        'title': 'Find the Lost Compass',
+        'description': 'Locate the legendary compass hidden in the old forest.',
+      },
+      {
+        'title': 'Defeat the Shadow Beast',
+        'description':
+            'Face your fears and conquer the beast beneath the ruins.',
+      },
+      {
+        'title': 'Deliver the Secret Scroll',
+        'description':
+            'Travel to the Mystic Tower and hand over the scroll safely.',
+      },
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Your Quests'),
+        leading: const Icon(Icons.explore_outlined),
+      ),
+      body: ListView.separated(
+        padding: EdgeInsets.all(16.w),
+        itemCount: quests.length,
+        separatorBuilder: (_, __) => SizedBox(height: 16.h),
+        itemBuilder: (context, index) {
+          final quest = quests[index];
+          return Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    quest['title']!,
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    quest['description']!,
+                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
+                  ),
+                  SizedBox(height: 12.h),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Started: ${quest['title']}')),
+                      );
+                    },
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('Start Quest'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
