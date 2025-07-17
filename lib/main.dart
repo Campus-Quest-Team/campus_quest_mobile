@@ -694,7 +694,15 @@ class QuestPage extends StatelessWidget {
                         label: const Text('Start Quest'),
                       ),
                       const Spacer(),
-                      const Icon(Icons.camera_alt, size: 24),
+                      IconButton(
+                        icon: const Icon(Icons.camera_alt, size: 24),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const CameraPage()),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ],
