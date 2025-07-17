@@ -112,6 +112,8 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }
@@ -237,8 +239,8 @@ class _InstagramHomePageState extends State<InstagramHomePage> {
     _pages.addAll([
       const CameraPage(),
       FeedPage(
-        onMessageIconPressed: () {
-          _pageController.jumpToPage(2); // Navigate to MessagesPage
+        onProfileIconPressed: () {
+          _pageController.jumpToPage(4); // Navigate to MessagesPage
         },
       ),
       const MessagesPage(),
@@ -258,10 +260,11 @@ class _InstagramHomePageState extends State<InstagramHomePage> {
         },
         children: _pages,
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      //bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
+/*
   Widget _buildBottomNavigationBar() {
     return BottomNavigationBar(
       currentIndex: _selectedIndex,
@@ -302,6 +305,7 @@ class _InstagramHomePageState extends State<InstagramHomePage> {
       ],
     );
   }
+  */
 }
 
 class CameraPage extends StatelessWidget {
@@ -316,55 +320,177 @@ class CameraPage extends StatelessWidget {
 }
 
 class FeedPage extends StatelessWidget {
-  final VoidCallback onMessageIconPressed;
-  const FeedPage({super.key, required this.onMessageIconPressed});
+  final VoidCallback onProfileIconPressed;
+  const FeedPage({super.key, required this.onProfileIconPressed});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.explore_outlined, size: 35), // Quests button
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const QuestPage()),
+            );
+          },
+        ),
         title: Text(
-          'Campus Quest',
+          'CAMPUS QUEST',
           style: TextStyle(
-            fontFamily: 'Boldmark',
-            fontSize: 28.sp,
             color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Boldmark',
+            fontSize: 24,
           ),
         ),
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 1,
+        toolbarHeight: 75,
+
         actions: [
           IconButton(
-            icon: const Icon(Icons.explore_outlined),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const QuestPage()),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: onMessageIconPressed,
+            icon: const Icon(Icons.person, size: 35),
+            onPressed: onProfileIconPressed,
           ),
         ],
       ),
       body: ListView.builder(
-        itemCount: 5,
+        itemCount: 3,
         itemBuilder: (context, index) {
-          return PostCard(index: index);
+          return PostCard(
+            username: 'User1234',
+            caption: 'Caption words and stuff',
+            quest: 'COMPLETE THE QUEST',
+            imageUrl:
+                'https://graduate.ucf.edu/wp-content/uploads/sites/8/2023/05/Admitted-Students-Page.jpg',
+            likes: 327,
+            index: index,
+          );
         },
       ),
+      backgroundColor: const Color.fromARGB(217, 217, 217, 217),
     );
   }
 }
 
 class PostCard extends StatelessWidget {
+  final String username;
+  final String caption;
+  final String quest;
+  final String imageUrl;
+  final int likes;
   final int index;
-  const PostCard({required this.index});
+
+  const PostCard({
+    super.key,
+    required this.username,
+    required this.caption,
+    required this.quest,
+    required this.imageUrl,
+    required this.likes,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            //user info and flag
+            Row(
+              children: [
+                const Icon(
+                  Icons.account_circle_outlined,
+                  size: 28,
+                ), //replace with profile picture?
+                const SizedBox(width: 5),
+                Text(
+                  username,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.outlined_flag, size: 24),
+              ],
+            ),
+            const SizedBox(height: 12),
+            //Quest title
+            Text(
+              quest,
+              //index % 2 == 0 ? 'FIND THE HORSEMAN' : 'WHERE IS KNIGHTRO?',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+            const SizedBox(height: 12),
+            //image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imageUrl,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                //Placehodler if image fails to load
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 200,
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        size: 50,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            //likes and caption row
+            Row(
+              children: [
+                const Icon(Icons.favorite_border, size: 24),
+                const SizedBox(width: 6),
+                Text(
+                  '$likes',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    caption,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    /*
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -404,6 +530,7 @@ class PostCard extends StatelessWidget {
         ),
       ],
     );
+    */
   }
 }
 
@@ -512,8 +639,17 @@ class QuestPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Quests'),
-        leading: const Icon(Icons.explore_outlined),
+        title: const Text(
+          'Your Quests',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Boldmark',
+            fontSize: 24,
+          ),
+        ),
+        centerTitle: true,
+        leading: const Icon(Icons.explore_outlined, size: 35),
       ),
       body: ListView.separated(
         padding: EdgeInsets.all(16.w),
@@ -544,14 +680,30 @@ class QuestPage extends StatelessWidget {
                     style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
                   ),
                   SizedBox(height: 12.h),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Started: ${quest['title']}')),
-                      );
-                    },
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('Start Quest'),
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Started: ${quest['title']}'),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text('Start Quest'),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.camera_alt, size: 24),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const CameraPage()),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
