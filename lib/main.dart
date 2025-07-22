@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 void main() {
   runApp(
@@ -12,7 +14,7 @@ void main() {
       builder: (context, child) {
         return MaterialApp(debugShowCheckedModeBanner: false, home: child);
       },
-      child: const LoginPage(), // or LoginPage(), etc.
+      child: const InstagramHomePage(), // or LoginPage(), etc.
     ),
   );
 }
@@ -308,6 +310,94 @@ class _InstagramHomePageState extends State<InstagramHomePage> {
   */
 }
 
+class CameraPage extends StatefulWidget {
+  const CameraPage({super.key});
+
+  @override
+  State<CameraPage> createState() => _CameraPageState();
+}
+
+class _CameraPageState extends State<CameraPage> {
+  XFile? _imageFile; //stores captured image
+
+  Future<void> _takePhoto() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
+      setState(() {
+        _imageFile = pickedFile;
+      });
+    } catch (e) {
+      //print('Error taking photo: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to take photo: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Camera'),
+        centerTitle: true,
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            //display captured image or place holder (update UI later)
+            _imageFile == null
+                ? const Icon(
+                    Icons.camera_alt,
+                    size: 150,
+                    color: Colors.grey,
+                  )
+                : Image.file(
+                    File(_imageFile!.path),
+                    height: 500,
+                    width: double.infinity,
+                    fit: BoxFit.contain,
+                  ),
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+              onPressed: _takePhoto,
+              icon: const Icon(Icons.camera),
+              label: const Text('Open Camera'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
+            ),
+            const SizedBox(height: 20),
+            //clear image (only show if there is a captured image)
+            if (_imageFile != null)
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _imageFile = null; //clear image
+                  });
+                },
+                icon: const Icon(Icons.clear),
+                label: const Text('Clear Photo'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+/*
 class CameraPage extends StatelessWidget {
   const CameraPage({super.key});
 
@@ -318,6 +408,7 @@ class CameraPage extends StatelessWidget {
     );
   }
 }
+*/
 
 class FeedPage extends StatelessWidget {
   final VoidCallback onProfileIconPressed;
