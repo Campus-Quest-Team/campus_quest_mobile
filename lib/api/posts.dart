@@ -139,3 +139,27 @@ Future<Map<String, dynamic>?> getCurrentQuest() async {
 
   return null;
 }
+
+Future<List<Map<String, dynamic>>?> getFeed({
+  required String userId,
+  required String jwtToken,
+}) async {
+  final url = Uri.parse('http://supercoolfun.site:5001/api/getFeed');
+
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'userId': userId, 'jwtToken': jwtToken}),
+  );
+  print('getFeed status: ${response.statusCode}');
+  print('getFeed body: ${response.body}');
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    if (data.containsKey('feed')) {
+      return List<Map<String, dynamic>>.from(data['feed']);
+    }
+  }
+
+  return null;
+}
