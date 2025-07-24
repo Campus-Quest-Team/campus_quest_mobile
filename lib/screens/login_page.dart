@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_quest/screens/home_page.dart';
 import 'package:campus_quest/screens/register_page.dart';
 import 'package:campus_quest/styles/theme.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:campus_quest/services/login.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,96 +16,29 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   bool rememberMe = false;
 
-  Future<void> login({bool isAuto = false}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final url = Uri.parse('http://supercoolfun.site:5001/api/login');
-
-    final body = jsonEncode({
-      'login': username.text,
-      'password': passwordController.text,
-    });
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      );
-
-      if (response.body.isEmpty) throw Exception("Empty response");
-      final result = jsonDecode(response.body);
-
-      if (result.containsKey('error')) {
-        if (!isAuto) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['error'] ?? 'Login failed')),
-          );
-        }
-        return;
-      }
-
-      if (result.containsKey('accessToken') && result.containsKey('userId')) {
-        // Save credentials and token
-        await prefs.setString('savedLogin', username.text);
-        await prefs.setString('savedPassword', passwordController.text);
-        await prefs.setString('accessToken', result['accessToken']);
-        await prefs.setString('userId', result['userId']);
-
-        if (!isAuto) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Login successful')));
-        }
-
+  @override
+  void initState() {
+    super.initState();
+    autoLogin(
+      username: username,
+      passwordController: passwordController,
+      context: context,
+      onSuccess: () {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomePage()),
         );
-      } else {
-        if (!isAuto) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Unexpected response format')),
-          );
-        }
-      }
-    } catch (e) {
-      if (!isAuto) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    autoLogin();
-  }
-
-  Future<void> autoLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedLogin = prefs.getString('savedLogin');
-    final savedPassword = prefs.getString('savedPassword');
-
-    if (savedLogin != null && savedPassword != null) {
-      username.text = savedLogin;
-      passwordController.text = savedPassword;
-
-      // Attempt silent login
-      await login(isAuto: true);
-    }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: backgroundGradient,
-      width: double.infinity,
-      height: double.infinity,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Center(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: backgroundGradient,
+        child: Center(
           child: SingleChildScrollView(
             child: Container(
               width: MediaQuery.of(context).size.width * 0.8 > 500
@@ -119,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withAlpha(51),
                     blurRadius: 34,
                     offset: const Offset(0, 22),
                   ),
@@ -161,7 +92,22 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: login,
+                      onPressed: () {
+                        login(
+                          username: username,
+                          passwordController: passwordController,
+                          rememberMe: rememberMe,
+                          context: context,
+                          onSuccess: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HomePage(),
+                              ),
+                            );
+                          },
+                        );
+                      },
                       child: const Text('Login'),
                     ),
                   ),
@@ -177,7 +123,6 @@ class _LoginPageState extends State<LoginPage> {
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: EdgeInsets.zero,
                   ),
-
                   TextButton(
                     onPressed: () {
                       Navigator.push(

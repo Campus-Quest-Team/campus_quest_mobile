@@ -1,9 +1,17 @@
 import 'package:campus_quest/screens/login_page.dart';
 import 'package:campus_quest/styles/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   runApp(
     ScreenUtilInit(
       designSize: const Size(375, 812),

@@ -1,8 +1,7 @@
-import 'package:campus_quest/screens/login_page.dart';
-import 'package:campus_quest/styles/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:campus_quest/styles/theme.dart';
+import 'package:campus_quest/screens/login_page.dart';
+import 'package:campus_quest/api/users.dart'; // <-- Import your API function
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -18,54 +17,38 @@ class _RegisterPageState extends State<RegisterPage> {
   final lastNameController = TextEditingController();
   final emailController = TextEditingController();
 
-  Future<void> register() async {
-    final url = Uri.parse('http://supercoolfun.site:5001/api/register');
-
-    final body = jsonEncode({
-      "login": loginController.text,
-      "password": passwordController.text,
-      "firstName": firstNameController.text,
-      "lastName": lastNameController.text,
-      "email": emailController.text,
-    });
-
+  Future<void> handleRegister() async {
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      final message = await registerUser(
+        login: loginController.text,
+        password: passwordController.text,
+        firstName: firstNameController.text,
+        lastName: lastNameController.text,
+        email: emailController.text,
       );
 
-      final result = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Registration successful'),
-          ),
-        );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message!)));
         Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Registration failed')),
-        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: backgroundGradient,
-      width: double.infinity,
-      height: double.infinity,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Center(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: backgroundGradient,
+        child: Center(
           child: SingleChildScrollView(
             child: Container(
               width: MediaQuery.of(context).size.width * 0.8 > 500
@@ -77,7 +60,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withAlpha(51),
                     blurRadius: 34,
                     offset: const Offset(0, 22),
                   ),
@@ -134,7 +117,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: register,
+                      onPressed: handleRegister,
                       child: const Text('Register'),
                     ),
                   ),

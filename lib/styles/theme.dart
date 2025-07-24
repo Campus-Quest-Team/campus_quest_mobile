@@ -12,9 +12,7 @@ final ThemeData campusQuestTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
   fontFamily: 'Poppins',
-  scaffoldBackgroundColor: const Color(
-    0xFFFFF8DC,
-  ), // matches .current-quest-section
+  scaffoldBackgroundColor: Colors.transparent,
 
   colorScheme: ColorScheme.fromSeed(
     seedColor: const Color(0xFFEFBF04),
