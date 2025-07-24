@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:campus_quest/api/users.dart';
-import 'package:campus_quest/services/save_credentials.dart';
+import 'package:campus_quest/services/saved_credentials.dart';
 
 Future<void> autoLogin({
   required TextEditingController username,

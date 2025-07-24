@@ -1,9 +1,7 @@
 import 'package:camera/camera.dart';
-import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:campus_quest/services/camera.dart';
 import 'package:campus_quest/api/posts.dart';
 import 'package:campus_quest/services/login.dart';
@@ -24,14 +22,15 @@ class _QuestBodyState extends State<QuestBody> {
   bool _photoCaptured = false;
   File? _savedImage;
   final TextEditingController _captionController = TextEditingController();
-
-  final String questDescription =
-      'Locate the legendary compass hidden in the old forest.';
+  String? _questId;
+  String? _questDescription;
+  bool _isLoadingQuest = true;
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
+    _loadCurrentQuest();
   }
 
   Future<void> _initializeCamera() async {
@@ -85,25 +84,15 @@ class _QuestBodyState extends State<QuestBody> {
 
     final userId = credentials['userId']!;
     final jwtToken = credentials['accessToken']!;
-    final questId = '001'; // You can update this as needed.
+    final questId = _questId ?? 'unknown';
 
-    // Upload media
-    final fileUrl = await uploadMedia(_savedImage!, userId, questId, jwtToken);
-
-    if (fileUrl == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to upload media.')));
-      return;
-    }
-
-    // Submit post
+    // Submit post with file directly (no more uploadMedia)
     final success = await submitQuestPost(
       userId: userId,
       questId: questId,
       caption: _captionController.text,
-      questDescription: questDescription,
-      fileUrl: fileUrl,
+      questDescription: _questDescription ?? '',
+      file: _savedImage!, // ✅ this is now passed as a File, not a URL
       jwtToken: jwtToken,
     );
 
@@ -134,6 +123,75 @@ class _QuestBodyState extends State<QuestBody> {
     super.dispose();
   }
 
+  Future<void> _loadCurrentQuest() async {
+    final data = await getCurrentQuest();
+    if (!mounted) return;
+    setState(() {
+      _questId = data?['questId'];
+      _questDescription = data?['questDescription'] ?? 'Quest not found.';
+      _isLoadingQuest = false;
+    });
+  }
+
+  void _showCaptionDialog(BuildContext context) {
+    final tempController = TextEditingController(text: _captionController.text);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // 👈 makes it resize with keyboard
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            left: 16,
+            right: 16,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Enter Quest Notes',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFEFBF04), // your custom yellow
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              TextField(
+                controller: tempController,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'Your thoughts...',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _captionController.text = tempController.text;
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Done'),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,9 +213,24 @@ class _QuestBodyState extends State<QuestBody> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12.r),
               ),
-              child: Text(
-                questDescription,
-                style: TextStyle(fontSize: 25.sp, color: Colors.grey[800]),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 18,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: _isLoadingQuest
+                    ? const Center(child: CircularProgressIndicator())
+                    : Text(
+                        _questDescription ?? 'No quest available.',
+                        style: TextStyle(
+                          fontSize: 25.sp,
+                          color: Colors.grey[800],
+                        ),
+                      ),
               ),
             ),
             SizedBox(height: 12.h),
@@ -218,40 +291,17 @@ class _QuestBodyState extends State<QuestBody> {
                   )
                 : const Center(child: CircularProgressIndicator()),
             SizedBox(height: 12.h),
-            Focus(
-              onFocusChange: (hasFocus) {
-                if (hasFocus) {
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Enter Quest Notes'),
-                      content: TextField(
-                        controller: _captionController,
-                        decoration: const InputDecoration(
-                          labelText: 'Your thoughts...',
-                          border: OutlineInputBorder(),
-                        ),
-                        maxLines: 3,
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Done'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-              child: TextField(
-                controller: _captionController,
-                decoration: const InputDecoration(
-                  labelText: 'Quest notes',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
+            TextField(
+              controller: _captionController,
+              readOnly: true,
+              onTap: () => _showCaptionDialog(context),
+              decoration: const InputDecoration(
+                labelText: 'Quest notes',
+                border: OutlineInputBorder(),
               ),
+              maxLines: 2,
             ),
+
             if (_photoCaptured)
               Expanded(
                 child: Padding(

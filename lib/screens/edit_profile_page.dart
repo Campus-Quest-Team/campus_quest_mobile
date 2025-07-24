@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:campus_quest/services/save_credentials.dart';
+import 'package:campus_quest/services/saved_credentials.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
