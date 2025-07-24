@@ -68,7 +68,9 @@ class _RegisterPageState extends State<RegisterPage> {
         body: Center(
           child: SingleChildScrollView(
             child: Container(
-              width: 500,
+              width: MediaQuery.of(context).size.width * 0.8 > 500
+                  ? 500
+                  : MediaQuery.of(context).size.width * 0.8,
               padding: const EdgeInsets.all(40),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -88,7 +90,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     'Create Account',
                     style: TextStyle(
                       fontFamily: 'Boldmark',
-                      fontSize: 42,
+                      fontSize: 40,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFFEFBF04),
                     ),

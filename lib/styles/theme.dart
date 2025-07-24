@@ -39,8 +39,8 @@ final ThemeData campusQuestTheme = ThemeData(
   ),
 
   textTheme: const TextTheme(
-    bodyLarge: TextStyle(fontSize: 16, color: Colors.black),
-    bodyMedium: TextStyle(fontSize: 14, color: Colors.black),
+    bodyLarge: TextStyle(fontSize: 16, color: Colors.white),
+    bodyMedium: TextStyle(fontSize: 14, color: Colors.white),
     labelLarge: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
     titleLarge: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
   ),
@@ -57,14 +57,14 @@ final ThemeData campusQuestTheme = ThemeData(
 
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
-      foregroundColor: const Color.fromARGB(255, 88, 88, 88),
+      foregroundColor: const Color(0xFFEFBF04),
       textStyle: const TextStyle(fontWeight: FontWeight.w600),
     ),
   ),
 
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: const Color(0xFFAAAAAA),
+    fillColor: const Color(0xFF555555),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
       borderSide: const BorderSide(color: Color(0xFFCCCCCC)),
@@ -74,6 +74,7 @@ final ThemeData campusQuestTheme = ThemeData(
       borderSide: const BorderSide(color: Color(0xFFEFBF04), width: 2),
     ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    labelStyle: const TextStyle(color: Colors.grey),
   ),
 
   iconTheme: const IconThemeData(color: Colors.black87),

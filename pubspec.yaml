@@ -39,6 +39,7 @@ dependencies:
   provider: ^6.1.5
   http: ^0.13.6
   flutter_screenutil: ^5.9.0  # or latest version
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
