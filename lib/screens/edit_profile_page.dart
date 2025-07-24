@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:campus_quest/services/save_credentials.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -30,8 +31,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  void logout() {
-    // Clear local storage / token here
+  void logout() async {
+    await removeLogin(); // Clears saved login and password
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginPage()),

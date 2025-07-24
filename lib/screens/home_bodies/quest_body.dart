@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:campus_quest/services/camera.dart';
+import 'package:campus_quest/api/posts.dart';
+import 'package:campus_quest/services/login.dart';
 
 class QuestBody extends StatefulWidget {
   final VoidCallback onBackToFeedTap;
@@ -32,53 +35,28 @@ class _QuestBodyState extends State<QuestBody> {
   }
 
   Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    final backCamera = cameras.first;
-
-    _cameraController = CameraController(backCamera, ResolutionPreset.medium);
-    _initializeControllerFuture = _cameraController.initialize();
-    await _initializeControllerFuture;
-
-    if (mounted) {
-      setState(() => _isCameraInitialized = true);
+    try {
+      final controller = await initializeCamera();
+      if (!mounted) return;
+      setState(() {
+        _cameraController = controller;
+        _initializeControllerFuture = controller.initialize();
+        _isCameraInitialized = true;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Camera init error: $e')));
     }
   }
 
   Future<void> _takePhoto() async {
     try {
       await _initializeControllerFuture;
-      final image = await _cameraController.takePicture();
-
-      // Load image bytes
-      final bytes = await File(image.path).readAsBytes();
-      final decodedImage = img.decodeImage(bytes);
-
-      if (decodedImage == null) throw Exception("Failed to decode image");
-
-      // Crop to square (centered)
-      final size = decodedImage.width < decodedImage.height
-          ? decodedImage.width
-          : decodedImage.height;
-
-      final offsetX = (decodedImage.width - size) ~/ 2;
-      final offsetY = (decodedImage.height - size) ~/ 2;
-
-      final cropped = img.copyCrop(
-        decodedImage,
-        x: offsetX,
-        y: offsetY,
-        width: size,
-        height: size,
-      );
-
-      // Save cropped image
-      final directory = await getApplicationDocumentsDirectory();
-      final path =
-          '${directory.path}/${DateTime.now().millisecondsSinceEpoch}_square.jpg';
-      final savedImage = File(path)..writeAsBytesSync(img.encodeJpg(cropped));
-
+      final photo = await takeAndCropPhoto(_cameraController);
       setState(() {
-        _savedImage = savedImage;
+        _savedImage = photo;
         _photoCaptured = true;
       });
     } catch (e) {
@@ -89,10 +67,56 @@ class _QuestBodyState extends State<QuestBody> {
     }
   }
 
-  void _submitQuest() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Quest submitted!')));
+  void _submitQuest() async {
+    if (_savedImage == null || _captionController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please take a photo and write notes.')),
+      );
+      return;
+    }
+
+    final credentials = await getUserCredentials();
+    if (credentials == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User not logged in.')));
+      return;
+    }
+
+    final userId = credentials['userId']!;
+    final jwtToken = credentials['accessToken']!;
+    final questId = '001'; // You can update this as needed.
+
+    // Upload media
+    final fileUrl = await uploadMedia(_savedImage!, userId, questId, jwtToken);
+
+    if (fileUrl == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to upload media.')));
+      return;
+    }
+
+    // Submit post
+    final success = await submitQuestPost(
+      userId: userId,
+      questId: questId,
+      caption: _captionController.text,
+      questDescription: questDescription,
+      fileUrl: fileUrl,
+      jwtToken: jwtToken,
+    );
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Quest submitted successfully!')),
+      );
+      widget.onBackToFeedTap();
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to submit quest.')));
+    }
   }
 
   void _retakePhoto() {

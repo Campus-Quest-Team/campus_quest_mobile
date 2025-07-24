@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:campus_quest/screens/home_page.dart';
 import 'package:campus_quest/api/users.dart';
 import 'package:campus_quest/services/save_credentials.dart';
 
@@ -73,4 +72,16 @@ Future<void> login({
       ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
+}
+
+//get userId and token from shared preferences
+Future<Map<String, String>?> getUserCredentials() async {
+  final prefs = await SharedPreferences.getInstance();
+  final userId = prefs.getString('userId');
+  final token = prefs.getString('accessToken');
+
+  if (userId != null && token != null) {
+    return {'userId': userId, 'accessToken': token};
+  }
+  return null;
 }
