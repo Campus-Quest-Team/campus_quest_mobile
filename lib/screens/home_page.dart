@@ -33,28 +33,37 @@ class _HomePageState extends State<HomePage> {
   );
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: backgroundGradient,
-      child: PageView(
-        controller: _controller,
-        children: [
-          QuestBody(
-            onBackToFeedTap: () => _controller.animateToPage(
-              1,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            ),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: Container(
+          decoration: backgroundGradient,
+          child: PageView(
+            controller: _controller,
+            children: [
+              QuestBody(
+                onBackToFeedTap: () => _controller.animateToPage(
+                  1,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                ),
+              ),
+              FeedBody(
+                onQuestTap: _goToQuestPage,
+                onProfileTap: _goToProfilePage,
+              ),
+              ProfileBody(
+                onBackToFeedTap: () => _controller.animateToPage(
+                  1,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                ),
+              ),
+            ],
           ),
-          FeedBody(onQuestTap: _goToQuestPage, onProfileTap: _goToProfilePage),
-          ProfileBody(
-            onBackToFeedTap: () => _controller.animateToPage(
-              1,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

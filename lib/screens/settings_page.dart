@@ -174,13 +174,13 @@ class _SettingPageState extends State<SettingPage> {
               TextField(
                 style: const TextStyle(color: Colors.white),
                 controller: usernameController,
-                decoration: const InputDecoration(labelText: 'Username'),
+                decoration: const InputDecoration(hintText: 'Username'),
               ),
               SizedBox(height: 16),
               TextField(
                 style: const TextStyle(color: Colors.white),
                 controller: bioController,
-                decoration: const InputDecoration(labelText: 'Bio'),
+                decoration: const InputDecoration(hintText: 'Bio'),
                 maxLines: 3,
               ),
               SizedBox(height: 24),

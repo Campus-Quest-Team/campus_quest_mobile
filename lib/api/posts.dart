@@ -200,3 +200,51 @@ Future<Map<String, dynamic>?> flagPost({
     return null;
   }
 }
+
+Future<Map<String, dynamic>?> updateCaption({
+  required String userId,
+  required String postId,
+  required String caption,
+  required String jwtToken,
+}) async {
+  final url = Uri.parse('${ApiConstants.baseUrl}/editCaption');
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'userId': userId,
+      'postId': postId,
+      'caption': caption,
+      'jwtToken': jwtToken,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    print('Failed to update caption: ${response.body}');
+    return null;
+  }
+}
+
+Future<Map<String, dynamic>?> deletePost({
+  required String userId,
+  required String postId,
+  required String jwtToken,
+}) async {
+  final response = await http.post(
+    Uri.parse('${ApiConstants.baseUrl}/deletePost'), // update if needed
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'userId': userId,
+      'postId': postId,
+      'jwtToken': jwtToken,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    return null;
+  }
+}

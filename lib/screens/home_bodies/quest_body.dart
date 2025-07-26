@@ -161,10 +161,7 @@ class _QuestBodyState extends State<QuestBody> {
                 style: const TextStyle(color: Colors.white),
                 controller: tempController,
                 maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Your thoughts...',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(hintText: 'Your thoughts...'),
               ),
               const SizedBox(height: 16),
               Row(
@@ -301,7 +298,7 @@ class _QuestBodyState extends State<QuestBody> {
                     readOnly: true,
                     onTap: () => _showCaptionDialog(context),
                     decoration: const InputDecoration(
-                      labelText: 'Quest notes',
+                      hintText: 'Quest notes',
                       border: OutlineInputBorder(),
                       filled: true,
                       fillColor: Color(0xFF555555),

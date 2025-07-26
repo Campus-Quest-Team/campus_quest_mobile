@@ -1,5 +1,6 @@
 // ignore_for_file: use_key_in_widget_constructors
 
+import 'package:campus_quest/api/posts.dart';
 import 'package:campus_quest/api/users.dart';
 import 'package:campus_quest/screens/settings_page.dart';
 import 'package:campus_quest/services/saved_credentials.dart';
@@ -60,7 +61,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                 title: const Text('Edit Caption'),
                 onTap: () {
                   Navigator.pop(context);
-                  // Handle edit caption logic here
+                  _editCaption(index);
                 },
               ),
               ListTile(
@@ -68,7 +69,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                 title: const Text('Delete Post'),
                 onTap: () {
                   Navigator.pop(context);
-                  // Handle delete post logic here
+                  _deletePost(index); // ✅ Hook in delete handler
                 },
               ),
             ],
@@ -76,6 +77,149 @@ class _ProfileBodyState extends State<ProfileBody> {
         );
       },
     );
+  }
+
+  Future<void> _editCaption(int index) async {
+    final post = userPosts[index];
+    final credentials = await getToken(context);
+
+    final tempController = TextEditingController(text: post['caption']);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            left: 16,
+            right: 16,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Edit Caption',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFEFBF04),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: tempController,
+                maxLines: 3,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: 'Update your caption...',
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final newCaption = tempController.text.trim();
+                      Navigator.pop(context);
+
+                      final result = await updateCaption(
+                        userId: credentials['userId']!,
+                        postId: post['_id'],
+                        caption: newCaption,
+                        jwtToken: credentials['accessToken']!,
+                      );
+
+                      if (result != null && result['success'] == true) {
+                        setState(() {
+                          userPosts[index]['caption'] = newCaption;
+                        });
+                        if (!context.mounted) return;
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
+
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Caption updated!')),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Failed to update caption'),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _deletePost(int index) async {
+    final post = userPosts[index];
+    final credentials = await getToken(context);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: const Text('Are you sure you want to delete this post?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final result = await deletePost(
+      userId: credentials['userId']!,
+      postId: post['_id'],
+      jwtToken: credentials['accessToken']!,
+    );
+
+    if (result != null && result['success'] == true) {
+      setState(() {
+        userPosts.removeAt(index);
+      });
+      if (!mounted) return;
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Post deleted successfully.')),
+      );
+    } else {
+      Navigator.pop(context); // Close the modal
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to delete post.')));
+    }
   }
 
   @override
@@ -197,14 +341,3 @@ class _ProfileBodyState extends State<ProfileBody> {
     );
   }
 }
-
-/* TODO:
-Checkmark should navigate to profile view
-Settings on top left toolbar
-Right back arrow should be X
-Replace edit profile button with proile view
-Remvove flagging posts
-Remove comment button
-Three dot menu to delete post, edit caption, 
-Integrate view on personal posts
-*/

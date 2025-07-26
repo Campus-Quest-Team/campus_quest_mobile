@@ -27,7 +27,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _tryAutoLogin() async {
-    print('Attempting auto-login...');
     if (await autoLogin(
       username: username,
       passwordController: passwordController,
@@ -40,7 +39,6 @@ class _LoginPageState extends State<LoginPage> {
       );
     } else {
       logOut();
-      print('Auto-login failed, showing login form.');
     }
   }
 
@@ -101,14 +99,16 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 30),
                   TextField(
+                    style: const TextStyle(color: Colors.white),
                     controller: username,
-                    decoration: const InputDecoration(labelText: 'Username'),
+                    decoration: const InputDecoration(hintText: 'Username'),
                   ),
                   const SizedBox(height: 16),
                   TextField(
+                    style: const TextStyle(color: Colors.white),
                     controller: passwordController,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Password'),
+                    decoration: const InputDecoration(hintText: 'Password'),
                   ),
                   const SizedBox(height: 24),
                   SizedBox(

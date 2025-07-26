@@ -72,8 +72,10 @@ final ThemeData campusQuestTheme = ThemeData(
       borderSide: const BorderSide(color: Color(0xFFEFBF04), width: 2),
     ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    labelStyle: const TextStyle(color: Colors.black54),
-    floatingLabelStyle: TextStyle(color: Colors.black), // label when focused
+    labelStyle: const TextStyle(color: Color(0xFFEFBF04)),
+    floatingLabelStyle: const TextStyle(
+      color: Color(0xFFEFBF04),
+    ), // label when focused
     hintStyle: const TextStyle(color: Colors.white70),
   ),
 

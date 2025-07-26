@@ -90,28 +90,28 @@ class _RegisterPageState extends State<RegisterPage> {
                   const SizedBox(height: 30),
                   TextField(
                     controller: loginController,
-                    decoration: const InputDecoration(labelText: 'Username'),
+                    decoration: const InputDecoration(hintText: 'Username'),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: passwordController,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Password'),
+                    decoration: const InputDecoration(hintText: 'Password'),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: firstNameController,
-                    decoration: const InputDecoration(labelText: 'First Name'),
+                    decoration: const InputDecoration(hintText: 'First Name'),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: lastNameController,
-                    decoration: const InputDecoration(labelText: 'Last Name'),
+                    decoration: const InputDecoration(hintText: 'Last Name'),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    decoration: const InputDecoration(hintText: 'Email'),
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
