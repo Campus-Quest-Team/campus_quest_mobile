@@ -97,10 +97,10 @@ class _ProfileBodyState extends State<ProfileBody> {
           foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
           elevation: Theme.of(context).appBarTheme.elevation,
         ),
-        isLoading
-            ? const CircularProgressIndicator()
-            : Expanded(
-                child: SingleChildScrollView(
+        Expanded(
+          child: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +152,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                     ],
                   ),
                 ),
-              ),
+        ),
       ],
     );
   }
