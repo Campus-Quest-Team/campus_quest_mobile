@@ -1,9 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:campus_quest/api/users.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:campus_quest/screens/login_page.dart';
 import 'package:campus_quest/services/saved_credentials.dart';
@@ -22,6 +19,7 @@ class _SettingPageState extends State<SettingPage> {
   File? _profileImage;
   String? _profileImageUrl;
   final ImagePicker _picker = ImagePicker();
+  bool _notificationsEnabled = true;
 
   @override
   void initState() {
@@ -42,42 +40,6 @@ class _SettingPageState extends State<SettingPage> {
         bioController.text = data['bio'] ?? '';
         _profileImageUrl = data['pfp'] ?? null;
       });
-    }
-  }
-
-  Future<Map<String, dynamic>?> editPFP({
-    required String userId,
-    required File file,
-    required String jwtToken,
-  }) async {
-    final url = Uri.parse('http://supercoolfun.site:5001/api/editPFP');
-
-    final request = http.MultipartRequest('POST', url)
-      ..fields['userId'] = userId
-      ..fields['jwtToken'] = jwtToken
-      ..files.add(
-        await http.MultipartFile.fromPath(
-          'file',
-          file.path,
-          contentType: MediaType('image', 'jpeg'),
-        ),
-      );
-
-    try {
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
-      final data = jsonDecode(responseBody);
-
-      if (response.statusCode == 200 && data['success'] == true) {
-        print('PFP updated: ${data['pfpUrl']}');
-        return data;
-      } else {
-        print('Failed to update PFP: $data');
-        return null;
-      }
-    } catch (e) {
-      print('editPFP error: $e');
-      return null;
     }
   }
 
@@ -112,6 +74,39 @@ class _SettingPageState extends State<SettingPage> {
         _profileImage = File(pickedFile.path);
       });
       await _saveProfileImage(File(pickedFile.path));
+    }
+  }
+
+  Future<void> _handleToggleNotifications() async {
+    final credentials = await getToken(context);
+    final userId = credentials['userId'];
+    final jwtToken = credentials['accessToken'];
+
+    final result = await toggleNotifications(
+      userId: userId!,
+      jwtToken: jwtToken!,
+    );
+
+    if (result != null && result['success'] == true) {
+      setState(() {
+        _notificationsEnabled = result['notifications'];
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _notificationsEnabled
+                ? 'Notifications enabled.'
+                : 'Notifications disabled.',
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update notification settings.'),
+        ),
+      );
     }
   }
 
@@ -188,10 +183,20 @@ class _SettingPageState extends State<SettingPage> {
               ),
               SizedBox(height: 24),
               ListTile(
-                leading: const Icon(Icons.notifications),
-                title: const Text('Notifications'),
-                onTap: () {},
+                leading: Icon(
+                  _notificationsEnabled
+                      ? Icons.notifications_active
+                      : Icons.notifications_off,
+                  color: _notificationsEnabled ? Colors.green : Colors.grey,
+                ),
+                title: Text(
+                  _notificationsEnabled
+                      ? 'Notifications: ON'
+                      : 'Notifications: OFF',
+                ),
+                onTap: _handleToggleNotifications,
               ),
+
               ListTile(
                 leading: const Icon(Icons.lock),
                 title: const Text('Privacy'),

@@ -1,7 +1,7 @@
 // ignore_for_file: use_key_in_widget_constructors
 
 import 'package:campus_quest/api/users.dart';
-import 'package:campus_quest/screens/edit_profile_page.dart';
+import 'package:campus_quest/screens/settings_page.dart';
 import 'package:campus_quest/services/saved_credentials.dart';
 import 'package:campus_quest/widgets/post_card.dart';
 import 'package:flutter/material.dart';

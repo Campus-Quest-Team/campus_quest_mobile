@@ -106,3 +106,31 @@ Future<Map<String, dynamic>?> editPFP({
     return null;
   }
 }
+
+Future<Map<String, dynamic>?> toggleNotifications({
+  required String userId,
+  required String jwtToken,
+}) async {
+  final url = Uri.parse('${ApiConstants.baseUrl}/toggleNotifications');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwtToken',
+      },
+      body: jsonEncode({'userId': userId, 'jwtToken': jwtToken}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print('Failed to toggle notifications: ${response.statusCode}');
+      return null;
+    }
+  } catch (e) {
+    print('toggleNotifications error: $e');
+    return null;
+  }
+}
