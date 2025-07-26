@@ -170,11 +170,33 @@ Future<Map<String, dynamic>?> likePost({
   );
 
   if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    print(data);
-    return data;
+    return jsonDecode(response.body);
   } else {
-    print('Failed to like post: ${response.statusCode}');
+    return null;
+  }
+}
+
+Future<Map<String, dynamic>?> flagPost({
+  required String userId,
+  required String questPostId,
+  required String jwtToken,
+}) async {
+  final url = Uri.parse('${ApiConstants.baseUrl}/flagPost');
+
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'userId': userId,
+      'questPostId': questPostId,
+      'jwtToken': jwtToken,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    print('Failed to flag post: ${response.statusCode}');
     return null;
   }
 }

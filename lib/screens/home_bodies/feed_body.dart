@@ -78,109 +78,126 @@ class _FeedBodyState extends State<FeedBody> {
     }
   }
 
+  Future<void> _flagPost(int index) async {
+    final post = _feed[index];
+    final credentials = await getToken(context);
+    final userId = credentials['userId'];
+    final jwtToken = credentials['accessToken'];
+
+    if (userId != null && jwtToken != null) {
+      final response = await flagPost(
+        userId: userId,
+        questPostId: post['postId'],
+        jwtToken: jwtToken,
+      );
+
+      if (response != null && response['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post flagged for review.')),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to flag post.')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        AppBar(
-          automaticallyImplyLeading: false,
-          title: const Text('Campus Quest'),
-          centerTitle: false,
-          titleSpacing: 16,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.explore_outlined, size: 30),
-              onPressed: widget.onQuestTap,
-            ),
-            IconButton(
-              icon: const Icon(Icons.person, size: 30),
-              onPressed: widget.onProfileTap,
-            ),
-          ],
-        ),
-        Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _feed.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.hourglass_empty,
-                        size: 80,
-                        color: Colors.grey[400],
-                      ),
-
-                      const SizedBox(height: 16),
-                      const Text(
-                        'No posts yet.',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    ],
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text('Campus Quest'),
+        centerTitle: false,
+        titleSpacing: 16,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.explore_outlined, size: 30),
+            onPressed: widget.onQuestTap,
+          ),
+          IconButton(
+            icon: const Icon(Icons.person, size: 30),
+            onPressed: widget.onProfileTap,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _feed.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.hourglass_empty,
+                    size: 80,
+                    color: Colors.grey[400],
                   ),
-                )
-              : ListView.builder(
-                  itemCount: _feed.length,
-                  itemBuilder: (context, index) {
-                    final post = _feed[index];
-                    final creator = post['creator'] ?? {};
-                    return PostCard(
-                      username:
-                          creator['displayName'] ??
-                          'Anonymous', // top-level field
-                      profileImageUrl: creator['pfpUrl'] ?? '',
-                      caption: post['caption'] ?? '',
-                      quest: post['questDescription'] ?? '',
-                      imageUrl: post['mediaUrl'] ?? '',
-                      likes: post['likes'] ?? 0,
-                      index: index,
-                      timestamp: post['timeStamp'] ?? '', // correct key
-                      onLikePressed: () => _toggleLike(index),
-                      onMorePressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(20),
-                            ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No posts yet.',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              itemCount: _feed.length,
+              itemBuilder: (context, index) {
+                final post = _feed[index];
+                final creator = post['creator'] ?? {};
+                return PostCard(
+                  username: creator['displayName'] ?? 'Anonymous',
+                  profileImageUrl: creator['pfpUrl'] ?? '',
+                  caption: post['caption'] ?? '',
+                  quest: post['questDescription'] ?? '',
+                  imageUrl: post['mediaUrl'] ?? '',
+                  likes: post['likes'] ?? 0,
+                  index: index,
+                  timestamp: post['timeStamp'] ?? '',
+                  onLikePressed: () => _toggleLike(index),
+                  onMorePressed: () {
+                    final parentContext =
+                        context; // save valid Scaffold context
+
+                    showModalBottomSheet(
+                      context: context,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                      ),
+                      builder: (context) => Wrap(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.hide_source),
+                            title: const Text('Hide Post'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              setState(() => _feed.removeAt(index));
+                            },
                           ),
-                          builder: (context) => Wrap(
-                            children: [
-                              ListTile(
-                                leading: const Icon(Icons.hide_source),
-                                title: const Text('Hide Post'),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  setState(() => _feed.removeAt(index));
-                                },
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.flag),
-                                title: const Text('Flag Post'),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Post flagged.'),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
+                          ListTile(
+                            leading: const Icon(Icons.flag),
+                            title: const Text('Flag Post'),
+                            onTap: () async {
+                              Navigator.pop(context);
+                              await _flagPost(index);
+                              ScaffoldMessenger.of(parentContext).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Post flagged for review.'),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
+                        ],
+                      ),
                     );
                   },
-                ),
-        ),
-      ],
+                );
+              },
+            ),
     );
   }
 }
-/* TODO:
-Improved emptyview
-logo and "no posts yet" text
-Three dot menu to hide flag post
-*/
