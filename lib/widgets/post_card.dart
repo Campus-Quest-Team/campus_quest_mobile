@@ -123,14 +123,12 @@ class PostCard extends StatelessWidget {
                       splashRadius: 20,
                     )
                   : const Icon(Icons.chat_bubble_outline, size: 24),
-              Expanded(
-                child: Flexible(
-                  child: ExpandableText(
-                    quest,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.black87,
-                      fontSize: 15,
-                    ),
+              Flexible(
+                child: ExpandableText(
+                  quest,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.black87,
+                    fontSize: 15,
                   ),
                 ),
               ),
