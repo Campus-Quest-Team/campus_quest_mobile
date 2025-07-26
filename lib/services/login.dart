@@ -1,40 +1,31 @@
-import 'package:campus_quest/screens/login_page.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:campus_quest/api/users.dart';
 import 'package:campus_quest/services/saved_credentials.dart';
 
-Future<void> autoLogin({
+Future<bool> autoLogin({
+  required BuildContext context,
   required TextEditingController username,
   required TextEditingController passwordController,
-  required BuildContext context,
-  required void Function() onSuccess,
 }) async {
-  final prefs = await SharedPreferences.getInstance();
-  final savedLogin = prefs.getString('savedLogin');
-  final savedPassword = prefs.getString('savedPassword');
+  final savedCredentials = await getLogin(context);
 
-  if (savedLogin != null && savedPassword != null) {
-    username.text = savedLogin;
-    passwordController.text = savedPassword;
-    await login(
+  if (savedCredentials['username'] != null &&
+      savedCredentials['password'] != null) {
+    username.text = savedCredentials['username']!;
+    passwordController.text = savedCredentials['password']!;
+    return await login(
       username: username,
       passwordController: passwordController,
       rememberMe: true,
-      context: context,
-      isAuto: true,
-      onSuccess: onSuccess,
     );
   }
+  return false;
 }
 
-Future<void> login({
+Future<bool> login({
   required TextEditingController username,
   required TextEditingController passwordController,
   bool? rememberMe,
-  required BuildContext context,
-  required void Function() onSuccess,
-  bool isAuto = false,
 }) async {
   try {
     final result = await loginUser(
@@ -50,55 +41,21 @@ Future<void> login({
         await removeLogin();
       }
       await saveToken(result['accessToken']!, result['userId']!);
-
-      if (!isAuto && context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Login successful')));
-      }
-
-      if (context.mounted) {
-        onSuccess();
-      }
-    } else {
-      if (!isAuto && context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Login failed')));
-      }
+      return true;
     }
   } catch (e) {
-    if (!isAuto && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
+    print('Login error: $e');
   }
-}
-
-//get userId and token from shared preferences
-Future<Map<String, String>> getUserCredentials(BuildContext context) async {
-  final prefs = await SharedPreferences.getInstance();
-  String? userId = prefs.getString('userId');
-  String? token = prefs.getString('accessToken');
-
-  if (userId == null || token == null) {
-    await loginFallback(context);
-    userId = prefs.getString('userId');
-    token = prefs.getString('accessToken');
-  }
-  return {'userId': userId ?? '', 'accessToken': token ?? ''};
+  return false;
 }
 
 // If jwt token expired
-Future<void> loginFallback(BuildContext context) async {
-  final credentials = await getUserCredentials(context);
+Future<bool> reLogin(BuildContext context) async {
+  // "error": "The JWT is no longer valid"
+  final credentials = await getLogin(context);
   // Attempt login with saved credentials
-  await login(
-    username: TextEditingController(text: credentials['userId']),
-    passwordController: TextEditingController(text: credentials['accessToken']),
-    context: context,
-    isAuto: true,
-    onSuccess: () {},
+  return await login(
+    username: TextEditingController(text: credentials['username']),
+    passwordController: TextEditingController(text: credentials['password']),
   );
 }

@@ -1,63 +1,23 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:campus_quest/services/login.dart';
+import 'package:campus_quest/services/saved_credentials.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
-Future<String?> uploadMedia(
-  File file,
-  String userId,
-  String questId,
-  String jwtToken,
-) async {
-  final url = Uri.parse('http://supercoolfun.site:5001/api/uploadMedia');
-
-  final request = http.MultipartRequest('POST', url)
-    ..fields['userId'] = userId
-    ..fields['questId'] = questId
-    ..fields['jwtToken'] = jwtToken
-    ..files.add(
-      await http.MultipartFile.fromPath(
-        'file',
-        file.path,
-        contentType: MediaType('image', 'jpeg'), // or png if applicable
-      ),
-    );
-  try {
-    final response = await request.send();
-
-    final responseData = await response.stream.bytesToString();
-    final result = jsonDecode(responseData);
-
-    if (response.statusCode == 200 && result['fileUrl'] != null) {
-      print('Upload response: $result');
-
-      if (result['fileUrl'] != null) {
-        return result['fileUrl'];
-      } else {
-        print('Upload error: ${result['error']}');
-        return null;
-      }
-    } else {
-      print('Upload failed: ${result['error'] ?? 'Unknown error'}');
-      return null;
-    }
-  } catch (e) {
-    print('Upload error: $e');
-    return null;
-  }
-}
-
 Future<bool> submitQuestPost({
+  required BuildContext context,
   required String userId,
   required String questId,
   required String caption,
   required String questDescription,
   required File file,
   required String jwtToken,
+  bool retrying = false, // Prevent infinite loops
 }) async {
   final url = Uri.parse('http://supercoolfun.site:5001/api/submitPost');
 
-  // 🔍 Detect file extension (e.g., .jpg, .png)
   final extension = file.path.split('.').last.toLowerCase();
   String? mimeType;
 
@@ -94,11 +54,27 @@ Future<bool> submitQuestPost({
   try {
     final streamedResponse = await request.send();
     final responseString = await streamedResponse.stream.bytesToString();
-
     print('Submit response (${streamedResponse.statusCode}): $responseString');
 
     if (streamedResponse.statusCode == 200) {
       final data = jsonDecode(responseString);
+
+      if (data['error'] == 'The JWT is no longer valid' && !retrying) {
+        print('JWT expired. Logging in and retrying...');
+        await reLogin(context);
+
+        return await submitQuestPost(
+          context: context,
+          userId: userId,
+          questId: questId,
+          caption: caption,
+          questDescription: questDescription,
+          file: file,
+          jwtToken: jwtToken,
+          retrying: true,
+        );
+      }
+
       return data['success'] == true;
     } else {
       return false;
@@ -141,8 +117,10 @@ Future<Map<String, dynamic>?> getCurrentQuest() async {
 }
 
 Future<List<Map<String, dynamic>>?> getFeed({
+  required BuildContext context,
   required String userId,
   required String jwtToken,
+  bool retrying = false, // Prevent infinite loops
 }) async {
   final url = Uri.parse('http://supercoolfun.site:5001/api/getFeed');
 
@@ -153,9 +131,21 @@ Future<List<Map<String, dynamic>>?> getFeed({
   );
   print('getFeed status: ${response.statusCode}');
   print('getFeed body: ${response.body}');
-
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
+
+    if (data['error'] == 'The JWT is no longer valid' && !retrying) {
+      print('JWT expired. Logging in and retrying...');
+      await reLogin(context);
+
+      return await getFeed(
+        context: context,
+        userId: userId,
+        jwtToken: jwtToken,
+        retrying: true,
+      );
+    }
+
     if (data.containsKey('feed')) {
       return List<Map<String, dynamic>>.from(data['feed']);
     }

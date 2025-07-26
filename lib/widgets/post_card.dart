@@ -1,3 +1,4 @@
+import 'package:campus_quest/widgets/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -46,8 +47,6 @@ class PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formattedTime = _formatTimestamp(timestamp);
-
-    print('timestamp: $timestamp, formatted: $formattedTime');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,12 +123,15 @@ class PostCard extends StatelessWidget {
                       splashRadius: 20,
                     )
                   : const Icon(Icons.chat_bubble_outline, size: 24),
-              const Spacer(),
-              Text(
-                quest.toUpperCase(),
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Flexible(
+                  child: ExpandableText(
+                    quest,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.black87,
+                      fontSize: 15,
+                    ),
+                  ),
                 ),
               ),
             ],

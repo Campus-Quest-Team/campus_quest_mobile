@@ -33,7 +33,11 @@ class _FeedBodyState extends State<FeedBody> {
     final jwtToken = prefs.getString('accessToken');
 
     if (userId != null && jwtToken != null) {
-      final feed = await getFeed(userId: userId, jwtToken: jwtToken);
+      final feed = await getFeed(
+        context: context,
+        userId: userId,
+        jwtToken: jwtToken,
+      );
       if (mounted && feed != null) {
         setState(() {
           _feed = feed;

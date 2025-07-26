@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:campus_quest/services/saved_credentials.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
@@ -74,7 +75,7 @@ class _QuestBodyState extends State<QuestBody> {
       return;
     }
 
-    final credentials = await getUserCredentials(context);
+    final credentials = await getToken(context);
 
     final userId = credentials['userId']!;
     final jwtToken = credentials['accessToken']!;
@@ -82,6 +83,7 @@ class _QuestBodyState extends State<QuestBody> {
 
     // Submit post with file directly (no more uploadMedia)
     final success = await submitQuestPost(
+      context: context,
       userId: userId,
       questId: questId,
       caption: _captionController.text,

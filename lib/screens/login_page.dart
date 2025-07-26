@@ -23,13 +23,26 @@ class _LoginPageState extends State<LoginPage> {
       username: username,
       passwordController: passwordController,
       context: context,
-      onSuccess: () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
-      },
     );
+  }
+
+  Future<void> _handleLogin() async {
+    final success = await login(
+      username: username,
+      passwordController: passwordController,
+      rememberMe: rememberMe,
+    );
+
+    if (success) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login failed')));
+    }
   }
 
   @override
@@ -83,22 +96,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        login(
-                          username: username,
-                          passwordController: passwordController,
-                          rememberMe: rememberMe,
-                          context: context,
-                          onSuccess: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const HomePage(),
-                              ),
-                            );
-                          },
-                        );
-                      },
+                      onPressed: _handleLogin,
                       child: const Text('Login'),
                     ),
                   ),

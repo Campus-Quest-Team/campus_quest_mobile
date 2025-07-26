@@ -1,13 +1,9 @@
 // ignore_for_file: use_key_in_widget_constructors
 
-import 'dart:convert';
 import 'package:campus_quest/api/users.dart';
-import 'package:campus_quest/screens/edit_profile_page.dart';
-import 'package:campus_quest/screens/login_page.dart';
-import 'package:campus_quest/services/login.dart';
+import 'package:campus_quest/services/saved_credentials.dart';
 import 'package:campus_quest/widgets/post_card.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class ProfileBody extends StatefulWidget {
   final VoidCallback onBackToFeedTap;
@@ -34,7 +30,7 @@ class _ProfileBodyState extends State<ProfileBody> {
   Future<void> _loadProfile() async {
     // Replace with actual userId and jwtToken from storage
 
-    final credentials = await getUserCredentials(context);
+    final credentials = await getToken(context);
     final data = await getProfile(
       userId: credentials['userId']!,
       jwtToken: credentials['accessToken']!,
