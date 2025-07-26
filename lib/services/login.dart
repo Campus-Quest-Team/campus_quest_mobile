@@ -1,3 +1,4 @@
+import 'package:campus_quest/screens/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:campus_quest/api/users.dart';
 import 'package:campus_quest/services/saved_credentials.dart';
@@ -58,4 +59,18 @@ Future<bool> reLogin(BuildContext context) async {
     username: TextEditingController(text: credentials['username']),
     passwordController: TextEditingController(text: credentials['password']),
   );
+}
+
+Future<bool> logOut(BuildContext context) async {
+  try {
+    await removeLogin();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+    );
+    return true;
+  } catch (e) {
+    print('Logout error: $e');
+    return false;
+  }
 }

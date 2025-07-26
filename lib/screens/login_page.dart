@@ -5,7 +5,9 @@ import 'package:campus_quest/styles/theme.dart';
 import 'package:campus_quest/services/login.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, this.autoLogin = false});
+
+  final bool autoLogin;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -19,11 +21,27 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    autoLogin(
+    if (widget.autoLogin) {
+      _tryAutoLogin();
+    }
+  }
+
+  Future<void> _tryAutoLogin() async {
+    print('Attempting auto-login...');
+    if (await autoLogin(
       username: username,
       passwordController: passwordController,
       context: context,
-    );
+    )) {
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } else {
+      logOut(context);
+      print('Auto-login failed, showing login form.');
+    }
   }
 
   Future<void> _handleLogin() async {

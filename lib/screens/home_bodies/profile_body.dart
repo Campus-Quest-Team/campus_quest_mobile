@@ -1,6 +1,7 @@
 // ignore_for_file: use_key_in_widget_constructors
 
 import 'package:campus_quest/api/users.dart';
+import 'package:campus_quest/screens/edit_profile_page.dart';
 import 'package:campus_quest/services/saved_credentials.dart';
 import 'package:campus_quest/widgets/post_card.dart';
 import 'package:flutter/material.dart';
@@ -82,14 +83,16 @@ class _ProfileBodyState extends State<ProfileBody> {
     return Column(
       children: [
         AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {}, // Settings page or modal
-          ),
+          leading: CloseButton(onPressed: widget.onBackToFeedTap),
           actions: [
             IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: widget.onBackToFeedTap,
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingPage()),
+                );
+              }, // Settings page or modal
             ),
           ],
           title: const Text('Your Profile'),

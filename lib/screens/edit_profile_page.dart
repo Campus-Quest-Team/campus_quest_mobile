@@ -6,14 +6,14 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:campus_quest/services/saved_credentials.dart';
 
-class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({super.key});
+class SettingPage extends StatefulWidget {
+  const SettingPage({super.key});
 
   @override
-  State<EditProfilePage> createState() => _EditProfilePageState();
+  State<SettingPage> createState() => _SettingPageState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
+class _SettingPageState extends State<SettingPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController bioController = TextEditingController();
   File? _profileImage;
@@ -62,8 +62,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Edit Profile'),
-          leading: BackButton(onPressed: () => Navigator.pop(context)),
+          title: const Text('Settings'),
+          leading: CloseButton(onPressed: () => Navigator.pop(context)),
           actions: [
             IconButton(icon: const Icon(Icons.check), onPressed: saveProfile),
           ],

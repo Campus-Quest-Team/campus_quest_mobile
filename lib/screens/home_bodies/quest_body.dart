@@ -180,6 +180,22 @@ class _QuestBodyState extends State<QuestBody> {
                   child: const Text('Done'),
                 ),
               ),
+              Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: _submitQuest,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(double.infinity, double.infinity),
+                      textStyle: TextStyle(
+                        // 👈 makes the text larger and bolder
+                        fontSize: 30.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    child: const Text('Submit'),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
             ],
           ),
@@ -193,7 +209,7 @@ class _QuestBodyState extends State<QuestBody> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.close),
           onPressed: widget.onBackToFeedTap,
         ),
         title: const Text('Your Quest'),
@@ -231,103 +247,94 @@ class _QuestBodyState extends State<QuestBody> {
             ),
             SizedBox(height: 12.h),
             _isCameraInitialized
-                ? GestureDetector(
-                    onDoubleTap: _takePhoto,
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12.r),
-                            child: AspectRatio(
-                              aspectRatio: 1,
-                              child: _photoCaptured && _savedImage != null
-                                  ? Image.file(_savedImage!, fit: BoxFit.cover)
-                                  : OverflowBox(
-                                      alignment: Alignment.center,
-                                      maxWidth: double.infinity,
-                                      maxHeight: double.infinity,
-                                      child: FittedBox(
-                                        fit: BoxFit.cover,
-                                        child: SizedBox(
-                                          width: _cameraController
-                                              .value
-                                              .previewSize!
-                                              .height,
-                                          height: _cameraController
-                                              .value
-                                              .previewSize!
-                                              .width,
-                                          child: CameraPreview(
-                                            _cameraController,
-                                          ),
-                                        ),
+                ? Stack(
+                    children: [
+                      Center(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12.r),
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: _photoCaptured && _savedImage != null
+                                ? Image.file(_savedImage!, fit: BoxFit.cover)
+                                : OverflowBox(
+                                    alignment: Alignment.center,
+                                    maxWidth: double.infinity,
+                                    maxHeight: double.infinity,
+                                    child: FittedBox(
+                                      fit: BoxFit.cover,
+                                      child: SizedBox(
+                                        width: _cameraController
+                                            .value
+                                            .previewSize!
+                                            .height,
+                                        height: _cameraController
+                                            .value
+                                            .previewSize!
+                                            .width,
+                                        child: CameraPreview(_cameraController),
                                       ),
                                     ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                      if (_photoCaptured)
+                        Positioned(
+                          top: 12,
+                          left: 12,
+                          child: IconButton(
+                            onPressed: _retakePhoto,
+                            icon: const Icon(Icons.refresh),
+                            color: Colors.white,
+                            iconSize: 30,
+                            tooltip: 'Retake Photo',
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.black54,
+                              shape: const CircleBorder(),
                             ),
                           ),
                         ),
-                        if (_photoCaptured)
-                          Positioned(
-                            top: 12,
-                            left: 12,
-                            child: IconButton(
-                              onPressed: _retakePhoto,
-                              icon: const Icon(Icons.refresh),
-                              color: Colors.white,
-                              iconSize: 30,
-                              tooltip: 'Retake Photo',
-                              style: IconButton.styleFrom(
-                                backgroundColor: Colors.black54,
-                                shape: const CircleBorder(),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                    ],
                   )
                 : const Center(child: CircularProgressIndicator()),
             SizedBox(height: 12.h),
-            TextField(
-              controller: _captionController,
-              readOnly: true,
-              onTap: () => _showCaptionDialog(context),
-              decoration: const InputDecoration(
-                labelText: 'Quest notes',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 2,
-            ),
 
             if (_photoCaptured)
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 12.h),
-                  child: ElevatedButton(
-                    onPressed: _submitQuest,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, double.infinity),
-                      textStyle: TextStyle(
-                        // 👈 makes the text larger and bolder
-                        fontSize: 30.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    child: const Text('Submit'),
-                  ),
+              TextField(
+                controller: _captionController,
+                readOnly: true,
+                onTap: () => _showCaptionDialog(context),
+                decoration: const InputDecoration(
+                  labelText: 'Quest notes',
+                  border: OutlineInputBorder(),
                 ),
+                maxLines: 2,
               ),
 
             if (!_photoCaptured)
               Padding(
                 padding: EdgeInsets.only(top: 8.h, bottom: 12.h),
-                child: Text(
-                  'Double tap the screen to take a photo',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey[700],
-                    fontStyle: FontStyle.italic,
+                child: Center(
+                  child: ElevatedButton.icon(
+                    onPressed: _takePhoto,
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text("Take Photo"),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.black,
+                      backgroundColor: const Color(0xFFEFBF04), // Yellow
+                      textStyle: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24.w,
+                        vertical: 12.h,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ),
           ],
@@ -338,7 +345,6 @@ class _QuestBodyState extends State<QuestBody> {
 }
 
 /* TODO:
-Quest Body updates:
 Camera button on bottom instead of double tap
 Hide description before photo taken
 Make submit button smaller and different yellow

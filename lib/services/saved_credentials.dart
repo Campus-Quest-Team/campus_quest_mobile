@@ -15,7 +15,9 @@ Future<Map<String, String>> getLogin(BuildContext context) async {
   if (savedLogin == null || savedPassword == null) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
+      MaterialPageRoute(
+        builder: (context) => const LoginPage(autoLogin: false),
+      ),
     );
   }
 

@@ -34,6 +34,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LoginPage();
+    return LoginPage(autoLogin: true);
   }
 }
