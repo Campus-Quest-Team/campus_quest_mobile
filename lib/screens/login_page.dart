@@ -68,15 +68,6 @@ class _LoginPageState extends State<LoginPage> {
                       color: Color(0xFFEFBF04),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Please log in to continue',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontFamily: 'Poppins',
-                      color: Colors.black87,
-                    ),
-                  ),
                   const SizedBox(height: 30),
                   TextField(
                     controller: username,
@@ -141,3 +132,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+/*
+focused labels should be readable and not grey
+*/

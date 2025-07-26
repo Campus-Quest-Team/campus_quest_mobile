@@ -10,6 +10,8 @@ Future<void> removeLogin() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove('savedLogin');
   await prefs.remove('savedPassword');
+  await prefs.remove('accessToken');
+  await prefs.remove('userId');
 }
 
 Future<void> saveToken(String token, String userId) async {

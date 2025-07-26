@@ -51,3 +51,25 @@ Future<String?> registerUser({
     throw Exception(data['message'] ?? 'Registration failed');
   }
 }
+
+Future<Map<String, dynamic>?> getProfile({
+  required String userId,
+  required String jwtToken,
+}) async {
+  final url = Uri.parse('http://supercoolfun.site:5001/api/getProfile');
+
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'userId': userId, 'jwtToken': jwtToken}),
+  );
+  print('Response status: ${response.statusCode}');
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    print('User profile fetched successfully: $data');
+    return data['profileData'];
+  } else {
+    print('Error fetching user profile: ${response.body}');
+    return null;
+  }
+}

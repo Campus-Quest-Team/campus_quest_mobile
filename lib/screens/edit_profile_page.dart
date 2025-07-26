@@ -115,3 +115,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 }
+/* TODO:
+Logout button needs to move to settings page
+Convert this page to a settings page
+Add more settings options like notifications, privacy, etc.
+*/

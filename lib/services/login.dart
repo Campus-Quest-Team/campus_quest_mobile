@@ -1,3 +1,4 @@
+import 'package:campus_quest/screens/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:campus_quest/api/users.dart';
@@ -30,7 +31,7 @@ Future<void> autoLogin({
 Future<void> login({
   required TextEditingController username,
   required TextEditingController passwordController,
-  required bool rememberMe,
+  bool? rememberMe,
   required BuildContext context,
   required void Function() onSuccess,
   bool isAuto = false,
@@ -42,9 +43,10 @@ Future<void> login({
     );
 
     if (result != null) {
-      if (rememberMe) {
+      if (rememberMe == true) {
         await saveLogin(username.text, passwordController.text);
-      } else {
+      }
+      if (rememberMe == false) {
         await removeLogin();
       }
       await saveToken(result['accessToken']!, result['userId']!);
@@ -75,13 +77,28 @@ Future<void> login({
 }
 
 //get userId and token from shared preferences
-Future<Map<String, String>?> getUserCredentials() async {
+Future<Map<String, String>> getUserCredentials(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
-  final userId = prefs.getString('userId');
-  final token = prefs.getString('accessToken');
+  String? userId = prefs.getString('userId');
+  String? token = prefs.getString('accessToken');
 
-  if (userId != null && token != null) {
-    return {'userId': userId, 'accessToken': token};
+  if (userId == null || token == null) {
+    await loginFallback(context);
+    userId = prefs.getString('userId');
+    token = prefs.getString('accessToken');
   }
-  return null;
+  return {'userId': userId ?? '', 'accessToken': token ?? ''};
+}
+
+// If jwt token expired
+Future<void> loginFallback(BuildContext context) async {
+  final credentials = await getUserCredentials(context);
+  // Attempt login with saved credentials
+  await login(
+    username: TextEditingController(text: credentials['userId']),
+    passwordController: TextEditingController(text: credentials['accessToken']),
+    context: context,
+    isAuto: true,
+    onSuccess: () {},
+  );
 }

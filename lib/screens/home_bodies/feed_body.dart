@@ -84,6 +84,8 @@ class _FeedBodyState extends State<FeedBody> {
                       imageUrl: post['mediaUrl'] ?? '',
                       likes: post['likes'] ?? 0,
                       index: index,
+                      timestamp: post['createdAt'] ?? '',
+                      onMorePressed: () => {}, //TODO: Implement more
                     );
                   },
                 ),
@@ -92,3 +94,8 @@ class _FeedBodyState extends State<FeedBody> {
     );
   }
 }
+/* TODO:
+Improved emptyview
+logo and "no posts yet" text
+Three dot menu to hide flag post
+*/

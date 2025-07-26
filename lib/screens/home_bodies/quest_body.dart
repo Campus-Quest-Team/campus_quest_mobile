@@ -74,13 +74,7 @@ class _QuestBodyState extends State<QuestBody> {
       return;
     }
 
-    final credentials = await getUserCredentials();
-    if (credentials == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User not logged in.')));
-      return;
-    }
+    final credentials = await getUserCredentials(context);
 
     final userId = credentials['userId']!;
     final jwtToken = credentials['accessToken']!;
@@ -340,3 +334,10 @@ class _QuestBodyState extends State<QuestBody> {
     );
   }
 }
+
+/* TODO:
+Quest Body updates:
+Camera button on bottom instead of double tap
+Hide description before photo taken
+Make submit button smaller and different yellow
+*/
