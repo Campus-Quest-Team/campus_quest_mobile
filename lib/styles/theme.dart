@@ -37,8 +37,8 @@ final ThemeData campusQuestTheme = ThemeData(
   ),
 
   textTheme: const TextTheme(
-    bodyLarge: TextStyle(fontSize: 16, color: Colors.white),
-    bodyMedium: TextStyle(fontSize: 14, color: Colors.white),
+    bodyLarge: TextStyle(fontSize: 16),
+    bodyMedium: TextStyle(fontSize: 14),
     labelLarge: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
     titleLarge: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
   ),
@@ -72,7 +72,9 @@ final ThemeData campusQuestTheme = ThemeData(
       borderSide: const BorderSide(color: Color(0xFFEFBF04), width: 2),
     ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    labelStyle: const TextStyle(color: Colors.grey),
+    labelStyle: const TextStyle(color: Colors.black54),
+    floatingLabelStyle: TextStyle(color: Colors.black), // label when focused
+    hintStyle: const TextStyle(color: Colors.white70),
   ),
 
   iconTheme: const IconThemeData(color: Colors.black87),

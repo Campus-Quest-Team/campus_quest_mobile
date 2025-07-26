@@ -5,7 +5,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
 import 'package:campus_quest/services/camera.dart';
 import 'package:campus_quest/api/posts.dart';
-import 'package:campus_quest/services/login.dart';
 
 class QuestBody extends StatefulWidget {
   final VoidCallback onBackToFeedTap;
@@ -159,6 +158,7 @@ class _QuestBodyState extends State<QuestBody> {
               ),
               const SizedBox(height: 12),
               TextField(
+                style: const TextStyle(color: Colors.white),
                 controller: tempController,
                 maxLines: 4,
                 decoration: const InputDecoration(
@@ -293,15 +293,22 @@ class _QuestBodyState extends State<QuestBody> {
 
             if (_photoCaptured)
               Expanded(
-                child: TextField(
-                  controller: _captionController,
-                  readOnly: true,
-                  onTap: () => _showCaptionDialog(context),
-                  decoration: const InputDecoration(
-                    labelText: 'Quest notes',
-                    border: OutlineInputBorder(),
+                child: Container(
+                  margin: EdgeInsets.only(top: 12.h),
+                  child: TextField(
+                    style: const TextStyle(color: Colors.white),
+                    controller: _captionController,
+                    readOnly: true,
+                    onTap: () => _showCaptionDialog(context),
+                    decoration: const InputDecoration(
+                      labelText: 'Quest notes',
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Color(0xFF555555),
+                    ),
+                    maxLines: null,
+                    expands: true, // 👈 expands to fill vertical space
                   ),
-                  maxLines: 2,
                 ),
               ),
 
