@@ -47,6 +47,8 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final formattedTime = _formatTimestamp(timestamp);
 
+    print('timestamp: $timestamp, formatted: $formattedTime');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

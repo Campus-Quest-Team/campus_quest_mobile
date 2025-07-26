@@ -145,7 +145,7 @@ class _ProfileBodyState extends State<ProfileBody> {
                                 imageUrl: post['mediaUrl'] ?? '',
                                 likes: post['likes'] ?? 0,
                                 index: entry.key,
-                                timestamp: post['timestamp'] ?? '',
+                                timestamp: post['timeStamp'] ?? '',
                                 onMorePressed: () =>
                                     _showEditOptions(context, entry.key),
                               ),
