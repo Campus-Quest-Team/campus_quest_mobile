@@ -134,7 +134,7 @@ class _QuestBodyState extends State<QuestBody> {
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 👈 makes it resize with keyboard
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -154,10 +154,9 @@ class _QuestBodyState extends State<QuestBody> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFEFBF04), // your custom yellow
+                  color: Color(0xFFEFBF04),
                 ),
               ),
-
               const SizedBox(height: 12),
               TextField(
                 controller: tempController,
@@ -168,30 +167,23 @@ class _QuestBodyState extends State<QuestBody> {
                 ),
               ),
               const SizedBox(height: 16),
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _captionController.text = tempController.text;
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Done'),
-                ),
-              ),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   ElevatedButton(
-                    onPressed: _submitQuest,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, double.infinity),
-                      textStyle: TextStyle(
-                        // 👈 makes the text larger and bolder
-                        fontSize: 30.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Cancel
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _captionController.text = tempController.text;
+                      });
+                      Navigator.of(context).pop();
+                      _submitQuest(); // Submit after saving
+                    },
                     child: const Text('Submit'),
                   ),
                 ],
@@ -300,15 +292,17 @@ class _QuestBodyState extends State<QuestBody> {
             SizedBox(height: 12.h),
 
             if (_photoCaptured)
-              TextField(
-                controller: _captionController,
-                readOnly: true,
-                onTap: () => _showCaptionDialog(context),
-                decoration: const InputDecoration(
-                  labelText: 'Quest notes',
-                  border: OutlineInputBorder(),
+              Expanded(
+                child: TextField(
+                  controller: _captionController,
+                  readOnly: true,
+                  onTap: () => _showCaptionDialog(context),
+                  decoration: const InputDecoration(
+                    labelText: 'Quest notes',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
                 ),
-                maxLines: 2,
               ),
 
             if (!_photoCaptured)
@@ -343,9 +337,3 @@ class _QuestBodyState extends State<QuestBody> {
     );
   }
 }
-
-/* TODO:
-Camera button on bottom instead of double tap
-Hide description before photo taken
-Make submit button smaller and different yellow
-*/

@@ -5,6 +5,7 @@ import 'package:campus_quest/services/saved_credentials.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:campus_quest/services/api_constants.dart';
 
 Future<bool> submitQuestPost({
   required BuildContext context,
@@ -16,7 +17,7 @@ Future<bool> submitQuestPost({
   required String jwtToken,
   bool retrying = false, // Prevent infinite loops
 }) async {
-  final url = Uri.parse('http://supercoolfun.site:5001/api/submitPost');
+  final url = Uri.parse('${ApiConstants.baseUrl}/submitPost');
 
   final extension = file.path.split('.').last.toLowerCase();
   String? mimeType;
@@ -33,7 +34,6 @@ Future<bool> submitQuestPost({
       mimeType = 'video/mp4';
       break;
     default:
-      print('Unsupported file extension: $extension');
       return false;
   }
 
@@ -54,13 +54,11 @@ Future<bool> submitQuestPost({
   try {
     final streamedResponse = await request.send();
     final responseString = await streamedResponse.stream.bytesToString();
-    print('Submit response (${streamedResponse.statusCode}): $responseString');
 
     if (streamedResponse.statusCode == 200) {
       final data = jsonDecode(responseString);
 
       if (data['error'] == 'The JWT is no longer valid' && !retrying) {
-        print('JWT expired. Logging in and retrying...');
         await reLogin(context);
 
         return await submitQuestPost(
@@ -80,13 +78,12 @@ Future<bool> submitQuestPost({
       return false;
     }
   } catch (e) {
-    print('Submit post error: $e');
     return false;
   }
 }
 
 Future<Map<String, dynamic>?> getCurrentQuest() async {
-  final url = Uri.parse('http://supercoolfun.site:5001/api/currentQuest');
+  final url = Uri.parse('${ApiConstants.baseUrl}/currentQuest');
 
   try {
     final response = await http.get(
@@ -122,26 +119,27 @@ Future<List<Map<String, dynamic>>?> getFeed({
   required String jwtToken,
   bool retrying = false, // Prevent infinite loops
 }) async {
-  final url = Uri.parse('http://supercoolfun.site:5001/api/getFeed');
+  final url = Uri.parse('${ApiConstants.baseUrl}/getFeed');
 
   final response = await http.post(
     url,
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({'userId': userId, 'jwtToken': jwtToken}),
   );
-  print('getFeed status: ${response.statusCode}');
-  print('getFeed body: ${response.body}');
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
+    print(data);
 
     if (data['error'] == 'The JWT is no longer valid' && !retrying) {
-      print('JWT expired. Logging in and retrying...');
       await reLogin(context);
+
+      final tokenMap = await getToken(context);
+      final newJwtToken = tokenMap['accessToken'];
 
       return await getFeed(
         context: context,
         userId: userId,
-        jwtToken: jwtToken,
+        jwtToken: newJwtToken ?? jwtToken,
         retrying: true,
       );
     }
@@ -152,4 +150,31 @@ Future<List<Map<String, dynamic>>?> getFeed({
   }
 
   return null;
+}
+
+Future<Map<String, dynamic>?> likePost({
+  required String userId,
+  required String questPostId,
+  required String jwtToken,
+}) async {
+  final url = Uri.parse('${ApiConstants.baseUrl}/likePost');
+
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'userId': userId,
+      'questPostId': questPostId,
+      'jwtToken': jwtToken,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    print(data);
+    return data;
+  } else {
+    print('Failed to like post: ${response.statusCode}');
+    return null;
+  }
 }

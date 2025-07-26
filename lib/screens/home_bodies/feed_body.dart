@@ -1,7 +1,7 @@
+import 'package:campus_quest/services/saved_credentials.dart';
 import 'package:flutter/material.dart';
 import 'package:campus_quest/widgets/post_card.dart';
 import 'package:campus_quest/api/posts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class FeedBody extends StatefulWidget {
   final VoidCallback onQuestTap;
@@ -28,9 +28,9 @@ class _FeedBodyState extends State<FeedBody> {
   }
 
   Future<void> fetchFeed() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('userId');
-    final jwtToken = prefs.getString('accessToken');
+    final token = await getToken(context);
+    final userId = token['userId'];
+    final jwtToken = token['accessToken'];
 
     if (userId != null && jwtToken != null) {
       final feed = await getFeed(
@@ -48,6 +48,33 @@ class _FeedBodyState extends State<FeedBody> {
       setState(() {
         _isLoading = false;
       });
+    }
+    print('Feed fetched: ${_feed.length} posts');
+  }
+
+  Future<void> _toggleLike(int index) async {
+    final post = _feed[index];
+    final credentials = await getToken(context);
+    final userId = credentials['userId'];
+    final jwtToken = credentials['accessToken'];
+
+    if (userId != null && jwtToken != null) {
+      final response = await likePost(
+        userId: userId,
+        questPostId: post['postId'],
+        jwtToken: jwtToken,
+      );
+
+      if (response != null && response['success'] == true) {
+        setState(() {
+          _feed[index]['likes'] = response['likeCount'];
+          _feed[index]['liked'] = response['liked'];
+        });
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to toggle like')));
+      }
     }
   }
 
@@ -75,21 +102,75 @@ class _FeedBodyState extends State<FeedBody> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _feed.isEmpty
-              ? const Center(child: Text('No posts yet.'))
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.hourglass_empty,
+                        size: 80,
+                        color: Colors.grey[400],
+                      ),
+
+                      const SizedBox(height: 16),
+                      const Text(
+                        'No posts yet.',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                )
               : ListView.builder(
                   itemCount: _feed.length,
                   itemBuilder: (context, index) {
                     final post = _feed[index];
                     final creator = post['creator'] ?? {};
                     return PostCard(
-                      username: creator['displayName'] ?? 'Anonymous',
+                      username:
+                          creator['displayName'] ??
+                          'Anonymous', // top-level field
+                      profileImageUrl: creator['pfpUrl'] ?? '',
                       caption: post['caption'] ?? '',
                       quest: post['questDescription'] ?? '',
                       imageUrl: post['mediaUrl'] ?? '',
                       likes: post['likes'] ?? 0,
                       index: index,
-                      timestamp: post['createdAt'] ?? '',
-                      onMorePressed: () => {}, //TODO: Implement more
+                      timestamp: post['timeStamp'] ?? '', // correct key
+                      onLikePressed: () => _toggleLike(index),
+                      onMorePressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
+                          ),
+                          builder: (context) => Wrap(
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.hide_source),
+                                title: const Text('Hide Post'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  setState(() => _feed.removeAt(index));
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.flag),
+                                title: const Text('Flag Post'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Post flagged.'),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

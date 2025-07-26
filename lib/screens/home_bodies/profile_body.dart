@@ -108,12 +108,43 @@ class _ProfileBodyState extends State<ProfileBody> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        displayName,
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 32,
+                            backgroundColor: Colors.grey[300],
+                            backgroundImage: pfp.isNotEmpty
+                                ? NetworkImage(pfp)
+                                : null,
+                            child: pfp.isEmpty
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 32,
+                                    color: Colors.white,
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  displayName,
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  bio,
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(bio, style: Theme.of(context).textTheme.bodyLarge),
+
                       const SizedBox(height: 16),
                       if (userPosts.isEmpty)
                         Center(

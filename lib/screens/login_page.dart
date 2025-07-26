@@ -39,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
         MaterialPageRoute(builder: (_) => const HomePage()),
       );
     } else {
-      logOut(context);
+      logOut();
       print('Auto-login failed, showing login form.');
     }
   }

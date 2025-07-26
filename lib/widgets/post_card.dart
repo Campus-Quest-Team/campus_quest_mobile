@@ -1,9 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campus_quest/widgets/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class PostCard extends StatelessWidget {
+class PostCard extends StatefulWidget {
   final String? username;
+  final String? profileImageUrl;
   final String caption;
   final String quest;
   final String imageUrl;
@@ -11,10 +13,12 @@ class PostCard extends StatelessWidget {
   final int index;
   final VoidCallback onMorePressed;
   final String timestamp;
+  final VoidCallback? onLikePressed;
 
   const PostCard({
     super.key,
     this.username,
+    this.profileImageUrl,
     required this.caption,
     required this.quest,
     required this.imageUrl,
@@ -22,8 +26,15 @@ class PostCard extends StatelessWidget {
     required this.index,
     required this.timestamp,
     required this.onMorePressed,
+    this.onLikePressed,
   });
 
+  @override
+  State<PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends State<PostCard> {
+  bool liked = false;
   String _formatTimestamp(String rawTimestamp) {
     try {
       final postTime = DateTime.parse(rawTimestamp).toLocal();
@@ -46,35 +57,54 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedTime = _formatTimestamp(timestamp);
+    final formattedTime = _formatTimestamp(widget.timestamp);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
-        if (username != null)
+        if (widget.username != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 16,
-                  backgroundColor: Colors.grey,
-                  child: Icon(Icons.person, size: 18, color: Colors.white),
+                  backgroundColor: Colors.grey[200],
+                  child: ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: widget.profileImageUrl ?? '',
+                      fit: BoxFit.cover,
+                      width: 32,
+                      height: 32,
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.person,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                      placeholder: (context, url) => const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 1.5),
+                      ),
+                    ),
+                  ),
                 ),
+
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    username!,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                    widget.username!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
                     ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.more_vert, size: 20),
-                  onPressed: onMorePressed,
+                  onPressed: widget.onMorePressed,
                   splashRadius: 20,
                 ),
               ],
@@ -84,20 +114,23 @@ class PostCard extends StatelessWidget {
         // Image
         ClipRRect(
           borderRadius: BorderRadius.circular(0),
-          child: Image.network(
-            imageUrl,
+          child: CachedNetworkImage(
+            imageUrl: widget.imageUrl,
             width: double.infinity,
             height: 300,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                height: 300,
-                color: Colors.grey[300],
-                child: const Center(
-                  child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                ),
-              );
-            },
+            errorWidget: (context, url, error) => Container(
+              height: 300,
+              color: Colors.grey[300],
+              child: const Center(
+                child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+              ),
+            ),
+            placeholder: (context, url) => Container(
+              height: 300,
+              color: Colors.grey[200],
+              child: const Center(child: CircularProgressIndicator()),
+            ),
           ),
         ),
 
@@ -106,9 +139,22 @@ class PostCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
-              const Icon(Icons.favorite_border, size: 24),
+              GestureDetector(
+                onTap: () {
+                  widget.onLikePressed?.call();
+                  setState(() {
+                    liked = !liked;
+                  });
+                },
+                child: Icon(
+                  liked ? Icons.favorite : Icons.favorite_border,
+                  color: liked ? Colors.red : Colors.black,
+                  size: 24,
+                ),
+              ),
+
               Text(
-                "$likes",
+                "${widget.likes}",
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.black87,
                   fontWeight: FontWeight.w700,
@@ -116,16 +162,15 @@ class PostCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              username == null
-                  ? IconButton(
-                      icon: const Icon(Icons.more_horiz),
-                      onPressed: onMorePressed,
-                      splashRadius: 20,
-                    )
-                  : const Icon(Icons.chat_bubble_outline, size: 24),
+              if (widget.username == null)
+                IconButton(
+                  icon: const Icon(Icons.more_horiz),
+                  onPressed: widget.onMorePressed,
+                  splashRadius: 20,
+                ),
               Flexible(
                 child: ExpandableText(
-                  quest,
+                  widget.quest,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.black87,
                     fontSize: 15,
@@ -137,7 +182,7 @@ class PostCard extends StatelessWidget {
         ),
 
         // Caption with timestamp
-        if (caption.isNotEmpty)
+        if (widget.caption.isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
             child: RichText(
@@ -151,7 +196,7 @@ class PostCard extends StatelessWidget {
                       color: Colors.grey,
                     ),
                   ),
-                  TextSpan(text: caption),
+                  TextSpan(text: widget.caption),
                 ],
               ),
             ),

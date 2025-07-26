@@ -61,16 +61,20 @@ Future<bool> reLogin(BuildContext context) async {
   );
 }
 
-Future<bool> logOut(BuildContext context) async {
+Future<bool> logOut() async {
   try {
     await removeLogin();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
     return true;
   } catch (e) {
     print('Logout error: $e');
     return false;
   }
+}
+
+// Call this function from your UI code after logOut() completes
+void navigateToLoginPage(BuildContext context) {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (_) => const LoginPage()),
+  );
 }

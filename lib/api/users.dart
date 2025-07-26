@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'package:campus_quest/services/api_constants.dart';
 import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'package:http_parser/http_parser.dart';
 
 Future<Map<String, String>?> loginUser({
   required String login,
   required String password,
 }) async {
-  final url = Uri.parse('http://supercoolfun.site:5001/api/login');
+  final url = Uri.parse('${ApiConstants.baseUrl}/login');
 
   final response = await http.post(
     url,
@@ -30,7 +33,7 @@ Future<String?> registerUser({
   required String lastName,
   required String email,
 }) async {
-  final url = Uri.parse('http://supercoolfun.site:5001/api/register');
+  final url = Uri.parse('${ApiConstants.baseUrl}/register');
 
   final response = await http.post(
     url,
@@ -56,20 +59,50 @@ Future<Map<String, dynamic>?> getProfile({
   required String userId,
   required String jwtToken,
 }) async {
-  final url = Uri.parse('http://supercoolfun.site:5001/api/getProfile');
+  final url = Uri.parse('${ApiConstants.baseUrl}/getProfile');
 
   final response = await http.post(
     url,
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({'userId': userId, 'jwtToken': jwtToken}),
   );
-  print('Response status: ${response.statusCode}');
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
-    print('User profile fetched successfully: $data');
     return data['profileData'];
   } else {
-    print('Error fetching user profile: ${response.body}');
+    return null;
+  }
+}
+
+Future<Map<String, dynamic>?> editPFP({
+  required String userId,
+  required File file,
+  required String jwtToken,
+}) async {
+  final url = Uri.parse('${ApiConstants.baseUrl}/editPFP');
+
+  final request = http.MultipartRequest('POST', url)
+    ..fields['userId'] = userId
+    ..fields['jwtToken'] = jwtToken
+    ..files.add(
+      await http.MultipartFile.fromPath(
+        'file',
+        file.path,
+        contentType: MediaType('image', 'jpeg'),
+      ),
+    );
+
+  try {
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+    final data = jsonDecode(responseBody);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      return data;
+    } else {
+      return null;
+    }
+  } catch (e) {
     return null;
   }
 }
