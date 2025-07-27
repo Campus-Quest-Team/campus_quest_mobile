@@ -66,7 +66,7 @@ flutter_launcher_icons:
   android: true
   ios: true
   adaptive_icon_background: "assets/adaptive_background.png"     # Or path to a solid background image
-  adaptive_icon_foreground: "assets/adaptive_logo.png"
+  adaptive_icon_foreground: "assets/adaptive_icon.png"
 
 # The following section is specific to Flutter packages.
 flutter:
