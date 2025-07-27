@@ -2,6 +2,7 @@ import 'package:campus_quest/services/saved_credentials.dart';
 import 'package:flutter/material.dart';
 import 'package:campus_quest/widgets/post_card.dart';
 import 'package:campus_quest/api/posts.dart';
+import 'package:flutter_svg/svg.dart';
 
 class FeedBody extends StatefulWidget {
   final VoidCallback onQuestTap;
@@ -108,9 +109,12 @@ class _FeedBodyState extends State<FeedBody> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Campus Quest'),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 16.0 bottom: 12.0),
+          child: SvgPicture.asset('assets/full_logo.svg', height: 50),
+        ),
         centerTitle: false,
-        titleSpacing: 16,
+        titleSpacing: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.explore_outlined, size: 30),

@@ -3,6 +3,7 @@ import 'package:campus_quest/screens/home_page.dart';
 import 'package:campus_quest/screens/register_page.dart';
 import 'package:campus_quest/styles/theme.dart';
 import 'package:campus_quest/services/login.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key, this.autoLogin = false});
@@ -73,7 +74,12 @@ class _LoginPageState extends State<LoginPage> {
               width: MediaQuery.of(context).size.width * 0.8 > 500
                   ? 500
                   : MediaQuery.of(context).size.width * 0.8,
-              padding: const EdgeInsets.all(40),
+              padding: const EdgeInsets.only(
+                top: 0,
+                bottom: 0,
+                left: 25,
+                right: 25,
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(25),
@@ -88,16 +94,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Campus Quest',
-                    style: TextStyle(
-                      fontFamily: 'Boldmark',
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFEFBF04),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
+                  SvgPicture.asset('assets/full_logo.svg', height: 120),
                   TextField(
                     style: const TextStyle(color: Colors.white),
                     controller: username,
