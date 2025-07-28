@@ -3,72 +3,79 @@ import 'package:flutter/material.dart';
 class ExpandableText extends StatefulWidget {
   final String text;
   final TextStyle? style;
+  final int maxLinesCollapsed;
 
-  const ExpandableText(this.text, {super.key, this.style});
+  const ExpandableText(
+    this.text, {
+    super.key,
+    this.style,
+    this.maxLinesCollapsed = 2,
+  });
 
   @override
   State<ExpandableText> createState() => _ExpandableTextState();
 }
 
-class _ExpandableTextState extends State<ExpandableText> {
+class _ExpandableTextState extends State<ExpandableText>
+    with SingleTickerProviderStateMixin {
   bool expanded = false;
-  bool _overflows = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkOverflow());
-  }
-
-  void _checkOverflow() {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: widget.text,
-        style: widget.style ?? DefaultTextStyle.of(context).style,
-      ),
-      maxLines: 2,
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: MediaQuery.of(context).size.width);
-
-    if (mounted && _overflows != textPainter.didExceedMaxLines) {
-      setState(() {
-        _overflows = textPainter.didExceedMaxLines;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    if (!_overflows) {
-      return Text(widget.text, style: widget.style);
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final span = TextSpan(
+          text: widget.text,
+          style: widget.style ?? DefaultTextStyle.of(context).style,
+        );
 
-    return GestureDetector(
-      onTap: () => setState(() => expanded = !expanded),
-      child: AnimatedCrossFade(
-        crossFadeState: expanded
-            ? CrossFadeState.showSecond
-            : CrossFadeState.showFirst,
-        duration: const Duration(milliseconds: 200),
-        firstChild: ShaderMask(
-          shaderCallback: (Rect bounds) {
-            return const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.black, Colors.transparent],
-            ).createShader(bounds);
-          },
-          blendMode: BlendMode.dstIn,
-          child: Text(
-            widget.text,
-            maxLines: 2,
-            overflow: TextOverflow.clip,
-            softWrap: true,
-            style: widget.style,
+        final painter = TextPainter(
+          text: span,
+          maxLines: widget.maxLinesCollapsed,
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: constraints.maxWidth);
+
+        final overflows = painter.didExceedMaxLines;
+
+        if (!overflows) {
+          return Text(widget.text, style: widget.style);
+        }
+
+        return GestureDetector(
+          onTap: () => setState(() => expanded = !expanded),
+          child: Stack(
+            children: [
+              // Expanded full text (always laid out but toggled visibility)
+              Opacity(
+                opacity: expanded ? 1 : 0,
+                child: Text(widget.text, softWrap: true, style: widget.style),
+              ),
+              // Collapsed text with gradient overlay
+              AnimatedOpacity(
+                opacity: expanded ? 0 : 1,
+                duration: const Duration(milliseconds: 200),
+                child: ShaderMask(
+                  shaderCallback: (Rect bounds) {
+                    return const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.black, Colors.transparent],
+                    ).createShader(bounds);
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: Text(
+                    widget.text,
+                    maxLines: widget.maxLinesCollapsed,
+                    overflow: TextOverflow.clip,
+                    softWrap: true,
+                    style: widget.style,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-        secondChild: Text(widget.text, softWrap: true, style: widget.style),
-      ),
+        );
+      },
     );
   }
 }
