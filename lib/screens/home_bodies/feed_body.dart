@@ -19,10 +19,12 @@ class FeedBody extends StatefulWidget {
   State<FeedBody> createState() => _FeedBodyState();
 }
 
-class _FeedBodyState extends State<FeedBody> {
+class _FeedBodyState extends State<FeedBody>
+    with AutomaticKeepAliveClientMixin {
   List<Map<String, dynamic>> _feed = [];
   bool _isLoading = true;
-
+  @override
+  bool get wantKeepAlive => true;
   @override
   void initState() {
     super.initState();
@@ -107,6 +109,7 @@ class _FeedBodyState extends State<FeedBody> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,

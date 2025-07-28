@@ -16,12 +16,15 @@ class ProfileBody extends StatefulWidget {
   State<ProfileBody> createState() => _ProfileBodyState();
 }
 
-class _ProfileBodyState extends State<ProfileBody> {
+class _ProfileBodyState extends State<ProfileBody>
+    with AutomaticKeepAliveClientMixin {
   List<Map<String, dynamic>> userPosts = [];
   String displayName = '';
   String bio = '';
   String pfp = '';
   bool isLoading = true;
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -225,6 +228,7 @@ class _ProfileBodyState extends State<ProfileBody> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Column(
       children: [
         AppBar(
