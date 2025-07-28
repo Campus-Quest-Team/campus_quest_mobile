@@ -30,13 +30,14 @@ class _ProfileBodyState extends State<ProfileBody> {
   }
 
   Future<void> _loadProfile() async {
-    // Replace with actual userId and jwtToken from storage
-
     final credentials = await getToken(context);
     final data = await getProfile(
       userId: credentials['userId']!,
       jwtToken: credentials['accessToken']!,
     );
+
+    if (!mounted) return;
+
     if (data != null) {
       setState(() {
         displayName = data['displayName'] ?? 'You';

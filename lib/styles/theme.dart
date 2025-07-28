@@ -24,7 +24,7 @@ final BoxDecoration whiteCard = BoxDecoration(
 final ThemeData campusQuestTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
-  fontFamily: 'Poppins',
+  fontFamily: 'Anuphan',
   scaffoldBackgroundColor: Colors.transparent,
 
   colorScheme: ColorScheme.fromSeed(
@@ -45,7 +45,7 @@ final ThemeData campusQuestTheme = ThemeData(
       fontWeight: FontWeight.bold,
       fontSize: 20,
       color: Colors.black,
-      fontFamily: 'Boldmark',
+      fontFamily: 'Anuphan',
     ),
   ),
 
@@ -77,11 +77,11 @@ final ThemeData campusQuestTheme = ThemeData(
     filled: true,
     fillColor: const Color(0xFF555555),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(20.r),
       borderSide: const BorderSide(color: Color(0xFFCCCCCC)),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(20.r),
       borderSide: const BorderSide(color: Color(0xFFEFBF04), width: 2),
     ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
