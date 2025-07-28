@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campus_quest/widgets/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PostCard extends StatefulWidget {
   final String? username;
@@ -63,53 +64,66 @@ class _PostCardState extends State<PostCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
-        if (widget.username != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: Colors.grey[200],
-                  child: ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: widget.profileImageUrl ?? '',
-                      fit: BoxFit.cover,
-                      width: 32,
-                      height: 32,
-                      errorWidget: (context, url, error) => const Icon(
-                        Icons.person,
-                        size: 18,
-                        color: Colors.white,
-                      ),
-                      placeholder: (context, url) => const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 1.5),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Profile Picture (conditionally shown)
+              if (widget.username != null)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: Colors.grey[200],
+                      child: ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: widget.profileImageUrl ?? '',
+                          fit: BoxFit.cover,
+                          width: 32,
+                          height: 32,
+                          errorWidget: (context, url, error) => const Icon(
+                            Icons.person,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          placeholder: (context, url) => const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 1.5),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                    const SizedBox(width: 5),
+                    Text(
+                      widget.username!,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                SizedBox(width: 10.w),
 
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    widget.username!,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
+              const SizedBox(width: 8),
+
+              // Quest title always shown, takes remaining space
+              ExpandableText(
+                widget.quest,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.black87,
+                  fontSize: 15,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.more_vert, size: 20),
-                  onPressed: widget.onMorePressed,
-                  splashRadius: 20,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
 
         // Image
         ClipRRect(
@@ -138,6 +152,7 @@ class _PostCardState extends State<PostCard> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
                 onTap: () {
@@ -152,7 +167,7 @@ class _PostCardState extends State<PostCard> {
                   size: 24,
                 ),
               ),
-
+              const SizedBox(width: 4),
               Text(
                 "${widget.likes}",
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -162,47 +177,23 @@ class _PostCardState extends State<PostCard> {
                 ),
               ),
               const SizedBox(width: 12),
-              if (widget.username == null)
-                IconButton(
-                  icon: const Icon(Icons.more_horiz),
-                  onPressed: widget.onMorePressed,
-                  splashRadius: 20,
-                ),
-              Flexible(
+
+              // Timestamp + Caption using ExpandableText
+              Expanded(
                 child: ExpandableText(
-                  widget.quest,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.black87,
-                    fontSize: 15,
-                  ),
+                  '$formattedTime: ${widget.caption}',
+                  style: const TextStyle(color: Colors.black87, fontSize: 14),
                 ),
+              ),
+
+              IconButton(
+                icon: const Icon(Icons.more_vert, size: 20),
+                onPressed: widget.onMorePressed,
+                splashRadius: 20,
               ),
             ],
           ),
         ),
-
-        // Caption with timestamp
-        if (widget.caption.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
-            child: RichText(
-              text: TextSpan(
-                style: const TextStyle(color: Colors.black87, fontSize: 14),
-                children: [
-                  TextSpan(
-                    text: '[$formattedTime] ',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  TextSpan(text: widget.caption),
-                ],
-              ),
-            ),
-          ),
-
-        const Divider(height: 0, thickness: 0.4),
       ],
     );
   }

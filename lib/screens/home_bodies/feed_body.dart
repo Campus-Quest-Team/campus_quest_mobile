@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_quest/widgets/post_card.dart';
 import 'package:campus_quest/api/posts.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class FeedBody extends StatefulWidget {
   final VoidCallback onQuestTap;
@@ -151,54 +152,61 @@ class _FeedBodyState extends State<FeedBody> {
               itemBuilder: (context, index) {
                 final post = _feed[index];
                 final creator = post['creator'] ?? {};
-                return PostCard(
-                  username: creator['displayName'] ?? 'Anonymous',
-                  profileImageUrl: creator['pfpUrl'] ?? '',
-                  caption: post['caption'] ?? '',
-                  quest: post['questDescription'] ?? '',
-                  imageUrl: post['mediaUrl'] ?? '',
-                  likes: post['likes'] ?? 0,
-                  index: index,
-                  timestamp: post['timeStamp'] ?? '',
-                  onLikePressed: () => _toggleLike(index),
-                  onMorePressed: () {
-                    final parentContext =
-                        context; // save valid Scaffold context
+                return Column(
+                  children: [
+                    PostCard(
+                      username: creator['displayName'] ?? 'Anonymous',
+                      profileImageUrl: creator['pfpUrl'] ?? '',
+                      caption: post['caption'] ?? '',
+                      quest: post['questDescription'] ?? '',
+                      imageUrl: post['mediaUrl'] ?? '',
+                      likes: post['likes'] ?? 0,
+                      index: index,
+                      timestamp: post['timeStamp'] ?? '',
+                      onLikePressed: () => _toggleLike(index),
+                      onMorePressed: () {
+                        final parentContext =
+                            context; // save valid Scaffold context
 
-                    showModalBottomSheet(
-                      context: context,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                      ),
-                      builder: (context) => Wrap(
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.hide_source),
-                            title: const Text('Hide Post'),
-                            onTap: () {
-                              Navigator.pop(context);
-                              setState(() => _feed.removeAt(index));
-                            },
+                        showModalBottomSheet(
+                          context: context,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
                           ),
-                          ListTile(
-                            leading: const Icon(Icons.flag),
-                            title: const Text('Flag Post'),
-                            onTap: () async {
-                              Navigator.pop(context);
-                              await _flagPost(index);
-                              ScaffoldMessenger.of(parentContext).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Post flagged for review.'),
-                                ),
-                              );
-                            },
+                          builder: (context) => Wrap(
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.hide_source),
+                                title: const Text('Hide Post'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  setState(() => _feed.removeAt(index));
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.flag),
+                                title: const Text('Flag Post'),
+                                onTap: () async {
+                                  Navigator.pop(context);
+                                  await _flagPost(index);
+                                  ScaffoldMessenger.of(
+                                    parentContext,
+                                  ).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Post flagged for review.'),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    );
-                  },
+                        );
+                      },
+                    ),
+                    SizedBox(height: 12.h),
+                  ],
                 );
               },
             ),
