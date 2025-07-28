@@ -243,7 +243,11 @@ class _QuestBodyState extends State<QuestBody> {
           ),
           title: const Text('Your Quest'),
           actions: [
-            IconButton(icon: const Icon(Icons.check), onPressed: _submitQuest),
+            if (_photoCaptured)
+              IconButton(
+                icon: const Icon(Icons.check),
+                onPressed: _submitQuest,
+              ),
           ],
         ),
         body: Padding(

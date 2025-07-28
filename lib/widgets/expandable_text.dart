@@ -30,7 +30,7 @@ class _ExpandableTextState extends State<ExpandableText> {
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: MediaQuery.of(context).size.width);
 
-    if (_overflows != textPainter.didExceedMaxLines) {
+    if (mounted && _overflows != textPainter.didExceedMaxLines) {
       setState(() {
         _overflows = textPainter.didExceedMaxLines;
       });
