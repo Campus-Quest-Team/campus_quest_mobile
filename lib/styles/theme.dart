@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 final BoxDecoration backgroundGradient = const BoxDecoration(
   gradient: LinearGradient(
@@ -6,6 +7,18 @@ final BoxDecoration backgroundGradient = const BoxDecoration(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   ),
+);
+
+final BoxDecoration whiteCard = BoxDecoration(
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(12.r),
+  boxShadow: [
+    BoxShadow(
+      color: Colors.black.withAlpha(51),
+      blurRadius: 34,
+      offset: const Offset(0, 22),
+    ),
+  ],
 );
 
 final ThemeData campusQuestTheme = ThemeData(

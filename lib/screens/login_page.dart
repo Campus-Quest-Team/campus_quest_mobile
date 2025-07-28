@@ -80,17 +80,7 @@ class _LoginPageState extends State<LoginPage> {
                 left: 25,
                 right: 25,
               ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(51),
-                    blurRadius: 34,
-                    offset: const Offset(0, 22),
-                  ),
-                ],
-              ),
+              decoration: whiteCard,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

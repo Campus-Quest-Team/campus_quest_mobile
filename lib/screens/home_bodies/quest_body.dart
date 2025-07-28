@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:campus_quest/services/saved_credentials.dart';
+import 'package:campus_quest/styles/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
@@ -16,7 +17,7 @@ class QuestBody extends StatefulWidget {
 }
 
 class _QuestBodyState extends State<QuestBody> {
-  late CameraController _cameraController;
+  CameraController? _cameraController;
   late Future<void> _initializeControllerFuture;
   bool _isCameraInitialized = false;
   bool _photoCaptured = false;
@@ -26,21 +27,49 @@ class _QuestBodyState extends State<QuestBody> {
   String? _questDescription;
   bool _isLoadingQuest = true;
 
+  List<CameraDescription> _cameras = [];
+  int _selectedCameraIndex = 0;
+
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
-    _loadCurrentQuest();
+    _setupCameraAndQuest();
   }
 
-  Future<void> _initializeCamera() async {
+  @override
+  void reassemble() {
+    super.reassemble();
+    _cameraController?.dispose();
+    _isCameraInitialized = false;
+    _initializeCamera(
+      _selectedCameraIndex,
+    ); // this will work because _cameras is already loaded
+  }
+
+  @override
+  void dispose() {
+    _cameraController?.dispose();
+    _captionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeCamera([int cameraIndex = 0]) async {
+    if (_cameras.isEmpty) return; // Make sure cameras are loaded
+
     try {
-      final controller = await initializeCamera();
+      final selectedCamera = _cameras[cameraIndex];
+      final controller = CameraController(
+        selectedCamera,
+        ResolutionPreset.medium,
+      );
+      await controller.initialize();
+
       if (!mounted) return;
       setState(() {
         _cameraController = controller;
-        _initializeControllerFuture = controller.initialize();
+        _initializeControllerFuture = Future.value();
         _isCameraInitialized = true;
+        _selectedCameraIndex = cameraIndex;
       });
     } catch (e) {
       if (!mounted) return;
@@ -53,7 +82,7 @@ class _QuestBodyState extends State<QuestBody> {
   Future<void> _takePhoto() async {
     try {
       await _initializeControllerFuture;
-      final photo = await takeAndCropPhoto(_cameraController);
+      final photo = await takeAndCropPhoto(_cameraController!);
       setState(() {
         _savedImage = photo;
         _photoCaptured = true;
@@ -111,13 +140,6 @@ class _QuestBodyState extends State<QuestBody> {
     });
   }
 
-  @override
-  void dispose() {
-    _cameraController.dispose();
-    _captionController.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadCurrentQuest() async {
     final data = await getCurrentQuest();
     if (!mounted) return;
@@ -126,6 +148,24 @@ class _QuestBodyState extends State<QuestBody> {
       _questDescription = data?['questDescription'] ?? 'Quest not found.';
       _isLoadingQuest = false;
     });
+  }
+
+  Future<void> _setupCameraAndQuest() async {
+    try {
+      _cameras = await availableCameras();
+      if (_cameras.isEmpty) {
+        throw Exception("No cameras found.");
+      }
+
+      _selectedCameraIndex = 0;
+      await _initializeCamera(_selectedCameraIndex);
+      await _loadCurrentQuest();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Setup error: $e')));
+    }
   }
 
   void _showCaptionDialog(BuildContext context) {
@@ -195,149 +235,189 @@ class _QuestBodyState extends State<QuestBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: widget.onBackToFeedTap,
+    return GestureDetector(
+      onDoubleTap: () {
+        final newIndex = (_selectedCameraIndex + 1) % _cameras.length;
+        _cameraController?.dispose();
+        _initializeCamera(newIndex);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: widget.onBackToFeedTap,
+          ),
+          title: const Text('Your Quest'),
         ),
-        title: const Text('Your Quest'),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 18,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: _isLoadingQuest
-                    ? const Center(child: CircularProgressIndicator())
-                    : Text(
-                        _questDescription ?? 'No quest available.',
-                        style: TextStyle(
-                          fontSize: 25.sp,
-                          color: Colors.grey[800],
-                        ),
+        body: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Speech bubble
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 18,
                       ),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            _isCameraInitialized
-                ? Stack(
-                    children: [
-                      Center(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12.r),
-                          child: AspectRatio(
-                            aspectRatio: 1,
-                            child: _photoCaptured && _savedImage != null
-                                ? Image.file(_savedImage!, fit: BoxFit.cover)
-                                : OverflowBox(
-                                    alignment: Alignment.center,
-                                    maxWidth: double.infinity,
-                                    maxHeight: double.infinity,
-                                    child: FittedBox(
-                                      fit: BoxFit.cover,
-                                      child: SizedBox(
-                                        width: _cameraController
-                                            .value
-                                            .previewSize!
-                                            .height,
-                                        height: _cameraController
-                                            .value
-                                            .previewSize!
-                                            .width,
-                                        child: CameraPreview(_cameraController),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: _isLoadingQuest
+                          ? const Center(child: CircularProgressIndicator())
+                          : Text(
+                              _questDescription ?? 'No quest available.',
+                              style: TextStyle(
+                                fontSize: 25.sp,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                    ),
+                    Positioned(
+                      bottom: -10,
+                      left: 24,
+                      child: CustomPaint(
+                        painter: _SpeechBubbleTailPainter(color: Colors.white),
+                        size: const Size(20, 10),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 14.h), // Small gap between bubble and camera
+                // Camera square (takes 1:1 space)
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: _isCameraInitialized
+                      ? Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12.r),
+                              child: _photoCaptured && _savedImage != null
+                                  ? Image.file(_savedImage!, fit: BoxFit.cover)
+                                  : OverflowBox(
+                                      alignment: Alignment.center,
+                                      maxWidth: double.infinity,
+                                      maxHeight: double.infinity,
+                                      child: FittedBox(
+                                        fit: BoxFit.cover,
+                                        child: SizedBox(
+                                          width:
+                                              _cameraController!
+                                                  .value
+                                                  .previewSize
+                                                  ?.height ??
+                                              1,
+                                          height:
+                                              _cameraController!
+                                                  .value
+                                                  .previewSize
+                                                  ?.width ??
+                                              1,
+                                          child: CameraPreview(
+                                            _cameraController!,
+                                          ),
+                                        ),
                                       ),
                                     ),
+                            ),
+                            if (_photoCaptured)
+                              Positioned(
+                                top: 12,
+                                left: 12,
+                                child: IconButton(
+                                  onPressed: _retakePhoto,
+                                  icon: const Icon(Icons.refresh),
+                                  color: Colors.white,
+                                  iconSize: 30,
+                                  tooltip: 'Retake Photo',
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.black54,
+                                    shape: const CircleBorder(),
                                   ),
-                          ),
-                        ),
+                                ),
+                              ),
+                          ],
+                        )
+                      : const Center(child: CircularProgressIndicator()),
+                ),
+
+                SizedBox(height: 14.h),
+
+                // Caption or shutter
+                if (_photoCaptured)
+                  Expanded(
+                    child: TextField(
+                      style: const TextStyle(color: Colors.white),
+                      controller: _captionController,
+                      readOnly: true,
+                      onTap: () => _showCaptionDialog(context),
+                      decoration: const InputDecoration(
+                        hintText: 'Quest notes',
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Color(0xFF555555),
                       ),
-                      if (_photoCaptured)
-                        Positioned(
-                          top: 12,
-                          left: 12,
-                          child: IconButton(
-                            onPressed: _retakePhoto,
-                            icon: const Icon(Icons.refresh),
+                      maxLines: null,
+                      expands: true,
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: EdgeInsets.only(top: 8.h),
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: _takePhoto,
+                        child: Container(
+                          width: 72.w,
+                          height: 72.w,
+                          decoration: BoxDecoration(
                             color: Colors.white,
-                            iconSize: 30,
-                            tooltip: 'Retake Photo',
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.black54,
-                              shape: const CircleBorder(),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.grey[800]!,
+                              width: 4,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.camera_alt,
+                              color: Colors.black,
+                              size: 30,
                             ),
                           ),
                         ),
-                    ],
-                  )
-                : const Center(child: CircularProgressIndicator()),
-            SizedBox(height: 12.h),
-
-            if (_photoCaptured)
-              Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(top: 12.h),
-                  child: TextField(
-                    style: const TextStyle(color: Colors.white),
-                    controller: _captionController,
-                    readOnly: true,
-                    onTap: () => _showCaptionDialog(context),
-                    decoration: const InputDecoration(
-                      hintText: 'Quest notes',
-                      border: OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Color(0xFF555555),
-                    ),
-                    maxLines: null,
-                    expands: true, // 👈 expands to fill vertical space
-                  ),
-                ),
-              ),
-
-            if (!_photoCaptured)
-              Padding(
-                padding: EdgeInsets.only(top: 8.h, bottom: 12.h),
-                child: Center(
-                  child: ElevatedButton.icon(
-                    onPressed: _takePhoto,
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text("Take Photo"),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      backgroundColor: const Color(0xFFEFBF04), // Yellow
-                      textStyle: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 24.w,
-                        vertical: 12.h,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
                       ),
                     ),
                   ),
-                ),
-              ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
+}
+
+class _SpeechBubbleTailPainter extends CustomPainter {
+  final Color color;
+  _SpeechBubbleTailPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..lineTo(size.width, 0)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

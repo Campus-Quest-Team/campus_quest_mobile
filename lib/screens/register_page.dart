@@ -55,17 +55,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ? 500
                   : MediaQuery.of(context).size.width * 0.8,
               padding: const EdgeInsets.all(40),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(51),
-                    blurRadius: 34,
-                    offset: const Offset(0, 22),
-                  ),
-                ],
-              ),
+              decoration: whiteCard,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
