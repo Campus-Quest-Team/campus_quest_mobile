@@ -134,3 +134,46 @@ Future<Map<String, dynamic>?> toggleNotifications({
     return null;
   }
 }
+
+Future<bool> checkIfPostedToday(String userId, String jwtToken) async {
+  final url = Uri.parse('${ApiConstants.baseUrl}/getProfile');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwtToken',
+      },
+      body: jsonEncode({'userId': userId, 'jwtToken': jwtToken}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List posts = data['profileData']['questPosts'] ?? [];
+
+      final today = DateTime.now();
+
+      for (var post in posts) {
+        final timestampStr = post['timeStamp'];
+        if (timestampStr != null) {
+          final timestamp = DateTime.tryParse(timestampStr);
+          if (timestamp != null &&
+              timestamp.year == today.year &&
+              timestamp.month == today.month &&
+              timestamp.day == today.day) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    } else {
+      print('Failed to fetch profile: ${response.statusCode}');
+      return false;
+    }
+  } catch (e) {
+    print('Error checking if posted today: $e');
+    return false;
+  }
+}
