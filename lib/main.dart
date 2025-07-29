@@ -24,7 +24,7 @@ void main() async {
           home: child, // Will be MyApp() now
         );
       },
-      child: const MyApp(), // 👈 Use your actual app entry point
+      child: const MyApp(),
     ),
   );
 }
