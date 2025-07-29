@@ -1,4 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:campus_quest/api/friends.dart';
+import 'package:campus_quest/services/saved_credentials.dart';
 import 'package:campus_quest/widgets/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PostCard extends StatefulWidget {
   final String? username;
+  final String? userId;
   final String? profileImageUrl;
   final String caption;
   final String quest;
@@ -19,6 +22,7 @@ class PostCard extends StatefulWidget {
   const PostCard({
     super.key,
     this.username,
+    this.userId,
     this.profileImageUrl,
     required this.caption,
     required this.quest,
@@ -36,6 +40,14 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   bool liked = false;
+  bool isFriend = false;
+  bool _friendStatusChecked = false;
+  @override
+  void initState() {
+    super.initState();
+    _checkFriendStatus();
+  }
+
   String _formatTimestamp(String rawTimestamp) {
     try {
       final postTime = DateTime.parse(rawTimestamp).toLocal();
@@ -53,6 +65,88 @@ class _PostCardState extends State<PostCard> {
       }
     } catch (_) {
       return '';
+    }
+  }
+
+  Future<void> _checkFriendStatus() async {
+    final credentials = await getToken(context);
+    final userId = credentials['userId'];
+    final jwtToken = credentials['accessToken'];
+    final friendId = widget.userId;
+
+    if (friendId == null || friendId == userId) return;
+
+    final friends = await fetchFriends(userId: userId!, jwtToken: jwtToken!);
+    setState(() {
+      isFriend = friends?.any((f) => f['userId'] == friendId) ?? false;
+      _friendStatusChecked = true;
+    });
+  }
+
+  void _showFriendMenu(BuildContext context, Offset position) async {
+    if (!_friendStatusChecked) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Loading friend status...')));
+      return;
+    }
+
+    final credentials = await getToken(context);
+    final userId = credentials['userId'];
+    final jwtToken = credentials['accessToken'];
+    final friendId = widget.userId;
+
+    if (friendId == null || friendId == userId) return;
+
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx - 150, // shift left by ~150 pixels
+        position.dy + 10,
+        0,
+        0,
+      ),
+
+      items: [
+        PopupMenuItem(
+          value: isFriend ? 'remove' : 'add',
+          child: Text(isFriend ? 'Remove Friend' : 'Add Friend'),
+        ),
+      ],
+    );
+
+    if (selected == 'add') {
+      final result = await addFriend(
+        userId: userId!,
+        friendId: friendId,
+        jwtToken: jwtToken!,
+      );
+      if (result != null) {
+        setState(() => isFriend = true);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Friend added!')));
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to add friend.')));
+      }
+    } else if (selected == 'remove') {
+      final result = await removeFriend(
+        userId: userId!,
+        friendId: friendId,
+        jwtToken: jwtToken!,
+      );
+      if (result != null) {
+        setState(() => isFriend = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Friend removed!')));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to remove friend.')),
+        );
+      }
     }
   }
 
@@ -75,28 +169,35 @@ class _PostCardState extends State<PostCard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: Colors.grey[200],
-                      child: ClipOval(
-                        child: CachedNetworkImage(
-                          imageUrl: widget.profileImageUrl ?? '',
-                          fit: BoxFit.cover,
-                          width: 32,
-                          height: 32,
-                          errorWidget: (context, url, error) => const Icon(
-                            Icons.person,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                          placeholder: (context, url) => const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 1.5),
+                    GestureDetector(
+                      onTapDown: (details) =>
+                          _showFriendMenu(context, details.globalPosition),
+                      child: CircleAvatar(
+                        radius: 16,
+                        backgroundColor: Colors.grey[200],
+                        child: ClipOval(
+                          child: CachedNetworkImage(
+                            imageUrl: widget.profileImageUrl ?? '',
+                            fit: BoxFit.cover,
+                            width: 32,
+                            height: 32,
+                            errorWidget: (context, url, error) => const Icon(
+                              Icons.person,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            placeholder: (context, url) => const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
+
                     const SizedBox(width: 5),
                     Text(
                       widget.username!,

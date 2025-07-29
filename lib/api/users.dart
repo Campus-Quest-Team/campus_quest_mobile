@@ -116,10 +116,7 @@ Future<Map<String, dynamic>?> toggleNotifications({
   try {
     final response = await http.post(
       url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $jwtToken',
-      },
+      headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'userId': userId, 'jwtToken': jwtToken}),
     );
 
@@ -141,10 +138,7 @@ Future<bool> checkIfPostedToday(String userId, String jwtToken) async {
   try {
     final response = await http.post(
       url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $jwtToken',
-      },
+      headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'userId': userId, 'jwtToken': jwtToken}),
     );
 

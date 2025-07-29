@@ -159,6 +159,7 @@ class _FeedBodyState extends State<FeedBody>
                   children: [
                     PostCard(
                       username: creator['displayName'] ?? 'Anonymous',
+                      userId: creator['userId'] ?? '',
                       profileImageUrl: creator['pfpUrl'] ?? '',
                       caption: post['caption'] ?? '',
                       quest: post['questDescription'] ?? '',
